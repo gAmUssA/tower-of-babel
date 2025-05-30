@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "UserEvent",
+  "namespace": "com.company.users",
+  "doc": "Represents a user event in the system",
+  "fields": [
+    {"name": "userId", "type": "string", "doc": "Unique user identifier"},
+    {"name": "email", "type": "string", "doc": "User email address"},
+    {"name": "fullName", "type": "string", "doc": "User's full name"},
+    {"name": "registrationDate", "type": "long", "doc": "Registration timestamp in epoch milliseconds"}
+  ]
+}

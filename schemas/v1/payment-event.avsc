@@ -1,0 +1,14 @@
+{
+  "type": "record",
+  "name": "PaymentEvent",
+  "namespace": "com.company.payments",
+  "doc": "Represents a payment event in the system",
+  "fields": [
+    {"name": "paymentId", "type": "string", "doc": "Unique payment identifier"},
+    {"name": "orderId", "type": "string", "doc": "Associated order identifier"},
+    {"name": "amount", "type": "double", "doc": "Payment amount"},
+    {"name": "paymentMethod", "type": "string", "doc": "Method of payment (e.g., CREDIT_CARD, PAYPAL)"},
+    {"name": "status", "type": "string", "doc": "Payment status (e.g., PENDING, COMPLETED, FAILED)"},
+    {"name": "timestamp", "type": "long", "doc": "Payment timestamp in epoch milliseconds"}
+  ]
+}

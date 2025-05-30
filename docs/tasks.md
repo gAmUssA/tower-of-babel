@@ -44,46 +44,46 @@ This task list is derived from the implementation plan in `docs/plan.md` and org
 ## Phase 2: Schema-First Development (Week 2)
 
 ### 2.1 Central Schema Repository
-- [ ] 2.1.1 Create `schemas/` directory structure
-- [ ] 2.1.2 Design `schemas/order-event.avsc` (V1)
-  - [ ] Define basic fields: orderId, userId, amount, status
-  - [ ] Add proper documentation and namespaces
-  - [ ] Validate Avro schema syntax
-- [ ] 2.1.3 Design `schemas/user-event.avsc`
-- [ ] 2.1.4 Design `schemas/payment-event.avsc`
-- [ ] 2.1.5 Plan schema evolution scenarios (V2, V3 versions)
+- [x] 2.1.1 Create `schemas/` directory structure
+- [x] 2.1.2 Design `schemas/order-event.avsc` (V1)
+  - [x] Define basic fields: orderId, userId, amount, status
+  - [x] Add proper documentation and namespaces
+  - [x] Validate Avro schema syntax
+- [x] 2.1.3 Design `schemas/user-event.avsc`
+- [x] 2.1.4 Design `schemas/payment-event.avsc`
+- [x] 2.1.5 Plan schema evolution scenarios (V2, V3 versions)
 
 ### 2.2 Java Code Generation (Gradle + Kotlin DSL)
-- [ ] 2.2.1 Create `services/order-service/` directory structure
-- [ ] 2.2.2 Set up `build.gradle.kts` with Kotlin DSL
-- [ ] 2.2.3 Configure Gradle Avro plugin
-- [ ] 2.2.4 Set up code generation from `schemas/` directory
-- [ ] 2.2.5 Configure generated code output to `build/generated-main-avro-java/`
-- [ ] 2.2.6 Test code generation with `./gradlew generateAvroJava`
-- [ ] 2.2.7 Integrate code generation into build process
+- [x] 2.2.1 Create `services/order-service/` directory structure
+- [x] 2.2.2 Set up `build.gradle.kts` with Kotlin DSL
+- [x] 2.2.3 Configure Gradle Avro plugin
+- [x] 2.2.4 Set up code generation from `schemas/` directory
+- [x] 2.2.5 Configure generated code output to `build/generated-main-avro-java/`
+- [x] 2.2.6 Test code generation with `./gradlew generateAvroJava`
+- [x] 2.2.7 Integrate code generation into build process
 
 ### 2.3 Python Code Generation (uv + FastAPI)
-- [ ] 2.3.1 Create `services/inventory-service/` directory structure
-- [ ] 2.3.2 Set up `pyproject.toml` with uv configuration
-- [ ] 2.3.3 Create `scripts/generate_classes.py` for Avro code generation
-- [ ] 2.3.4 Configure output to `src/generated/` directory
-- [ ] 2.3.5 Test Python dataclass generation
-- [ ] 2.3.6 Integrate generation into uv workflow
+- [x] 2.3.1 Create `services/inventory-service/` directory structure
+- [x] 2.3.2 Set up `pyproject.toml` with uv configuration
+- [x] 2.3.3 Create `scripts/generate_classes.py` for Avro code generation
+- [x] 2.3.4 Configure output to `src/generated/` directory
+- [x] 2.3.5 Test Python dataclass generation
+- [x] 2.3.6 Integrate generation into uv workflow
 
 ### 2.4 Node.js/TypeScript Code Generation
-- [ ] 2.4.1 Create `services/analytics-api/` directory structure
-- [ ] 2.4.2 Set up `package.json` with TypeScript configuration
-- [ ] 2.4.3 Install `avro-typescript` package
-- [ ] 2.4.4 Configure code generation scripts
-- [ ] 2.4.5 Set up output to `src/generated/` directory
-- [ ] 2.4.6 Test TypeScript interface generation
-- [ ] 2.4.7 Integrate into npm build process
+- [x] 2.4.1 Create `services/analytics-api/` directory structure
+- [x] 2.4.2 Set up `package.json` with TypeScript configuration
+- [x] 2.4.3 Create custom TypeScript code generation script
+- [x] 2.4.4 Configure code generation scripts
+- [x] 2.4.5 Set up output to `src/generated/` directory
+- [x] 2.4.6 Test TypeScript interface generation
+- [x] 2.4.7 Integrate into npm build process
 
 ### 2.5 Cross-Language Validation
-- [ ] 2.5.1 Generate code for all languages from same schema
-- [ ] 2.5.2 Validate field name consistency across languages
-- [ ] 2.5.3 Validate type mapping correctness
-- [ ] 2.5.4 Test schema changes trigger regeneration in all languages
+- [x] 2.5.1 Generate code for all languages from same schema
+- [x] 2.5.2 Validate field name consistency across languages
+- [x] 2.5.3 Validate type mapping correctness
+- [x] 2.5.4 Test schema changes trigger regeneration in all languages
 
 ---
 

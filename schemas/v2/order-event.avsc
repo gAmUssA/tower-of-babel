@@ -1,0 +1,14 @@
+{
+  "type": "record",
+  "name": "OrderEvent",
+  "namespace": "com.company.orders",
+  "doc": "Represents an order event in the system (V2 with additional fields)",
+  "fields": [
+    {"name": "orderId", "type": "string", "doc": "Unique order identifier"},
+    {"name": "userId", "type": "string", "doc": "Customer identifier"},
+    {"name": "amount", "type": "double", "doc": "Order total amount"},
+    {"name": "status", "type": "string", "doc": "Order status"},
+    {"name": "orderTimestamp", "type": ["null", "long"], "default": null, "doc": "Order timestamp in epoch milliseconds"},
+    {"name": "metadata", "type": ["null", {"type": "map", "values": "string"}], "default": null, "doc": "Additional order metadata"}
+  ]
+}

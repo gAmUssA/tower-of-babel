@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "OrderEvent",
+  "namespace": "com.company.orders",
+  "doc": "Represents an order event in the system (Incompatible version - removed required field)",
+  "fields": [
+    {"name": "orderId", "type": "string", "doc": "Unique order identifier"},
+    {"name": "amount", "type": "double", "doc": "Order total amount"},
+    {"name": "status", "type": "string", "doc": "Order status"},
+    {"name": "orderTimestamp", "type": "long", "doc": "Order timestamp in epoch milliseconds"}
+  ]
+}
