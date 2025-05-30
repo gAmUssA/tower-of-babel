@@ -17,7 +17,7 @@ jobs:
       # Start Kafka and Schema Registry using Docker Compose
       - name: Start Kafka and Schema Registry
         run: |
-          docker-compose up -d
+          docker compose up -d
           # Wait for services to be ready
           ./scripts/wait-for-services.sh
       
@@ -99,6 +99,9 @@ jobs:
           # Test if Kafka UI is accessible
           curl --fail --head http://localhost:8080 || echo "Kafka UI not available, but continuing"
           
+          # Check Kafka topics
+          docker compose exec -T kafka kafka-topics --bootstrap-server kafka:9092 --list || echo "Cannot list Kafka topics, but continuing"
+          
           # Verify generated code exists
           test -d services/order-service/build/generated-main-avro-java/com/company/orders || exit 1
           test -f services/inventory-service/src/generated/__init__.py || exit 1
@@ -109,4 +112,4 @@ jobs:
       # Clean up Docker containers
       - name: Clean up
         if: always()
-        run: docker-compose down -v
+        run: docker compose down -v
