@@ -10,46 +10,16 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    
-    services:
-      # Run Kafka and Schema Registry in Docker
-      kafka:
-        image: confluentinc/cp-kafka:7.9.0
-        ports:
-          - 29092:29092
-        env:
-          KAFKA_NODE_ID: 1
-          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
-          KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092'
-          KAFKA_LISTENERS: 'PLAINTEXT://kafka:9092,CONTROLLER://kafka:9093,PLAINTEXT_HOST://0.0.0.0:29092'
-          KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
-          KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
-          KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:9093'
-          KAFKA_PROCESS_ROLES: 'broker,controller'
-          KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-          KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-          KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-          KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
-          CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
-          KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
-      
-      schema-registry:
-        image: confluentinc/cp-schema-registry:7.9.0
-        ports:
-          - 8081:8081
-        env:
-          SCHEMA_REGISTRY_HOST_NAME: schema-registry
-          SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'kafka:9092'
-          SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
-        options: >-
-          --health-cmd "curl --fail http://localhost:8081/subjects || exit 1"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
     steps:
       - uses: actions/checkout@v3
+      
+      # Start Kafka and Schema Registry using Docker Compose
+      - name: Start Kafka and Schema Registry
+        run: |
+          docker-compose up -d
+          # Wait for services to be ready
+          ./scripts/wait-for-services.sh
       
       # Setup Java for Order Service
       - name: Set up JDK 17
@@ -123,8 +93,11 @@ jobs:
       # Run smoke tests
       - name: Run smoke tests
         run: |
-          # Test if Kafka and Schema Registry are accessible
+          # Test if Schema Registry is accessible
           curl --fail http://localhost:8081/subjects || exit 1
+          
+          # Test if Kafka UI is accessible
+          curl --fail --head http://localhost:8080 || echo "Kafka UI not available, but continuing"
           
           # Verify generated code exists
           test -d services/order-service/build/generated-main-avro-java/com/company/orders || exit 1
@@ -132,3 +105,8 @@ jobs:
           test -f services/analytics-api/src/generated/index.ts || exit 1
           
           echo "✅ Smoke tests passed!"
+      
+      # Clean up Docker containers
+      - name: Clean up
+        if: always()
+        run: docker-compose down -v
