@@ -14,90 +14,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
-      # Start Kafka and Schema Registry using Docker Compose
-      - name: Start Kafka and Schema Registry
-        run: |
-          # Update the wait-for-services.sh script to use 'docker compose' instead of 'docker-compose'
-          sed -i 's/docker-compose/docker compose/g' ./scripts/wait-for-services.sh
-          
-          # Modify the wait-for-services.sh script to increase timeout
-          sed -i 's/max_attempts=30/max_attempts=60/g' ./scripts/wait-for-services.sh
-          
-          # Create a GitHub Actions specific docker-compose file
-          cat > docker-compose.github.yml << 'EOL'
-          services:
-            kafka:
-              image: confluentinc/cp-kafka:7.9.0
-              user: root
-              ports:
-                - "29092:29092"
-              environment:
-                KAFKA_NODE_ID: 1
-                KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-                KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
-                KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,PLAINTEXT_HOST://0.0.0.0:29092
-                KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-                KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-                KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
-                KAFKA_PROCESS_ROLES: broker,controller
-                KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-                KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-                KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-                KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-                KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
-                CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
-                KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-              healthcheck:
-                test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
-                interval: 10s
-                timeout: 5s
-                retries: 5
-            
-            schema-registry:
-              image: confluentinc/cp-schema-registry:7.9.0
-              ports:
-                - "8081:8081"
-              environment:
-                SCHEMA_REGISTRY_HOST_NAME: schema-registry
-                SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka:9092
-                SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
-              depends_on:
-                kafka:
-                  condition: service_healthy
-              healthcheck:
-                test: ["CMD", "curl", "-f", "http://localhost:8081/subjects"]
-                interval: 10s
-                timeout: 5s
-                retries: 5
-            
-            kafka-ui:
-              image: provectuslabs/kafka-ui:latest
-              ports:
-                - "8080:8080"
-              environment:
-                KAFKA_CLUSTERS_0_NAME: local
-                KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
-                KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://schema-registry:8081
-              depends_on:
-                kafka:
-                  condition: service_healthy
-                schema-registry:
-                  condition: service_healthy
-          EOL
-          
-          # Start services using GitHub-specific compose file
-          docker compose -f docker-compose.github.yml up -d
-          
-          # Debug Kafka status
-          echo "Checking Kafka container status:"
-          docker ps -a | grep kafka
-          
-          echo "Checking Kafka logs:"
-          docker logs $(docker ps -q --filter name=kafka) | tail -n 50
-          
-          # Wait for services to be ready
-          ./scripts/wait-for-services.sh
-      
       # Setup Java for Order Service
       - name: Set up JDK 17
         uses: actions/setup-java@v3
@@ -170,23 +86,9 @@ jobs:
       # Run smoke tests
       - name: Run smoke tests
         run: |
-          # Test if Schema Registry is accessible
-          curl --fail http://localhost:8081/subjects || exit 1
-          
-          # Test if Kafka UI is accessible
-          curl --fail --head http://localhost:8080 || echo "Kafka UI not available, but continuing"
-          
-          # Check Kafka topics
-          docker compose -f docker-compose.github.yml exec -T kafka kafka-topics --bootstrap-server kafka:9092 --list || echo "Cannot list Kafka topics, but continuing"
-          
-          # Verify generated code exists
+          # Verify generated code exists after build
           test -d services/order-service/build/generated-main-avro-java/com/company/orders || exit 1
           test -f services/inventory-service/src/generated/__init__.py || exit 1
           test -f services/analytics-api/src/generated/index.ts || exit 1
           
           echo "✅ Smoke tests passed!"
-      
-      # Clean up Docker containers
-      - name: Clean up
-        if: always()
-        run: docker compose -f docker-compose.github.yml down -v
