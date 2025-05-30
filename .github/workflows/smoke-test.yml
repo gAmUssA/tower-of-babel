@@ -1,0 +1,134 @@
+name: Smoke Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    services:
+      # Run Kafka and Schema Registry in Docker
+      kafka:
+        image: confluentinc/cp-kafka:7.9.0
+        ports:
+          - 29092:29092
+        env:
+          KAFKA_NODE_ID: 1
+          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+          KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092'
+          KAFKA_LISTENERS: 'PLAINTEXT://kafka:9092,CONTROLLER://kafka:9093,PLAINTEXT_HOST://0.0.0.0:29092'
+          KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+          KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+          KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:9093'
+          KAFKA_PROCESS_ROLES: 'broker,controller'
+          KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+          KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+          KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+          KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+          CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+          KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      
+      schema-registry:
+        image: confluentinc/cp-schema-registry:7.9.0
+        ports:
+          - 8081:8081
+        env:
+          SCHEMA_REGISTRY_HOST_NAME: schema-registry
+          SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'kafka:9092'
+          SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+        options: >-
+          --health-cmd "curl --fail http://localhost:8081/subjects || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v3
+      
+      # Setup Java for Order Service
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+      
+      # Setup Python for Inventory Service
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+          cache: 'pip'
+      
+      # Setup Node.js for Analytics API
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: services/analytics-api/package-lock.json
+      
+      # Generate code from schemas
+      - name: Generate code from schemas
+        run: |
+          # Create directories for generated code
+          mkdir -p services/order-service/src/main/avro
+          mkdir -p services/inventory-service/src/generated
+          mkdir -p services/analytics-api/src/generated
+          
+          # Copy schemas to Java service
+          cp schemas/v1/*.avsc services/order-service/src/main/avro/
+          
+          # Generate Java code
+          cd services/order-service
+          ./gradlew generateAvroJava --info
+          cd ../..
+          
+          # Generate Python code
+          cd services/inventory-service
+          python scripts/generate_classes.py
+          cd ../..
+          
+          # Generate TypeScript code
+          cd services/analytics-api
+          npm install
+          npm run generate-types
+          cd ../..
+      
+      # Build Order Service
+      - name: Build Order Service
+        run: |
+          cd services/order-service
+          ./gradlew build --info
+      
+      # Build Inventory Service
+      - name: Build Inventory Service
+        run: |
+          cd services/inventory-service
+          pip install -e .
+      
+      # Build Analytics API
+      - name: Build Analytics API
+        run: |
+          cd services/analytics-api
+          npm install
+          npm run build
+      
+      # Run smoke tests
+      - name: Run smoke tests
+        run: |
+          # Test if Kafka and Schema Registry are accessible
+          curl --fail http://localhost:8081/subjects || exit 1
+          
+          # Verify generated code exists
+          test -d services/order-service/build/generated-main-avro-java/com/company/orders || exit 1
+          test -f services/inventory-service/src/generated/__init__.py || exit 1
+          test -f services/analytics-api/src/generated/index.ts || exit 1
+          
+          echo "✅ Smoke tests passed!"

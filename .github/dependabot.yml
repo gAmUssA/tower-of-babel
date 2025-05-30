@@ -1,0 +1,54 @@
+version: 2
+updates:
+  # Maintain dependencies for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+
+  # Maintain dependencies for Gradle
+  - package-ecosystem: "gradle"
+    directory: "/services/order-service"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      spring-dependencies:
+        patterns:
+          - "org.springframework*"
+      confluent-dependencies:
+        patterns:
+          - "io.confluent*"
+          - "org.apache.kafka*"
+
+  # Maintain dependencies for npm
+  - package-ecosystem: "npm"
+    directory: "/services/analytics-api"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      typescript-dependencies:
+        patterns:
+          - "@types/*"
+      kafka-dependencies:
+        patterns:
+          - "kafkajs"
+          - "@kafkajs/*"
+
+  # Maintain dependencies for pip
+  - package-ecosystem: "pip"
+    directory: "/services/inventory-service"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      fastapi-dependencies:
+        patterns:
+          - "fastapi"
+          - "uvicorn"
+      kafka-dependencies:
+        patterns:
+          - "confluent-kafka"
+          - "fastavro"
