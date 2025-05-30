@@ -1,38 +1,53 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:base"
+    "config:recommended"
   ],
   "packageRules": [
     {
-      "matchUpdateTypes": ["minor", "patch"],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
       "matchCurrentVersion": "!/^0/",
       "automerge": true
     },
     {
-      "matchPackagePatterns": ["^com.confluent"],
-      "groupName": "confluent packages"
+      "groupName": "confluent packages",
+      "matchPackageNames": [
+        "/^com.confluent/"
+      ]
     },
     {
-      "matchPackagePatterns": ["^org.springframework"],
-      "groupName": "spring packages"
+      "groupName": "spring packages",
+      "matchPackageNames": [
+        "/^org.springframework/"
+      ]
     },
     {
-      "matchPackagePatterns": ["^io.confluent"],
-      "groupName": "confluent packages"
+      "groupName": "confluent packages",
+      "matchPackageNames": [
+        "/^io.confluent/"
+      ]
     },
     {
-      "matchPackagePatterns": ["kafka"],
-      "groupName": "kafka packages"
+      "groupName": "kafka packages",
+      "matchPackageNames": [
+        "/kafka/"
+      ]
     }
   ],
   "ignoreDeps": [
     "org.jetbrains.kotlin:kotlin-gradle-plugin"
   ],
-  "labels": ["dependencies"],
+  "labels": [
+    "dependencies"
+  ],
   "prConcurrentLimit": 5,
   "prHourlyLimit": 2,
-  "schedule": ["every weekend"],
+  "schedule": [
+    "every weekend"
+  ],
   "timezone": "America/New_York",
   "dependencyDashboard": true,
   "semanticCommits": "enabled",
