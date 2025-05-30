@@ -21,14 +21,14 @@
   "license": "MIT",
   "dependencies": {
     "avro-typescript": "^1.0.4",
-    "express": "^4.18.2",
+    "express": "^5.1.0",
     "kafkajs": "^2.2.4",
     "socket.io": "^4.7.2",
     "@kafkajs/confluent-schema-registry": "^3.3.0",
     "dotenv": "^16.3.1"
   },
   "devDependencies": {
-    "@types/express": "^4.17.21",
+    "@types/express": "^5.0.2",
     "@types/jest": "^29.5.10",
     "@types/node": "^20.9.4",
     "jest": "^29.7.0",
