@@ -1,0 +1,28 @@
+version: '3.8'
+
+# Docker Compose configuration for Confluent Cloud deployment
+# This file is used when connecting to Confluent Cloud instead of local Kafka
+
+services:
+  # Only run services that need to connect to Confluent Cloud
+  # Kafka and Schema Registry are provided by Confluent Cloud
+  
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui-cloud
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: confluent-cloud
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: ${CONFLUENT_CLOUD_BOOTSTRAP_SERVERS}
+      KAFKA_CLUSTERS_0_SCHEMAREGISTRY: ${CONFLUENT_CLOUD_SCHEMA_REGISTRY_URL}
+      KAFKA_CLUSTERS_0_PROPERTIES_SECURITY_PROTOCOL: SASL_SSL
+      KAFKA_CLUSTERS_0_PROPERTIES_SASL_MECHANISM: PLAIN
+      KAFKA_CLUSTERS_0_PROPERTIES_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="${CONFLUENT_CLOUD_API_KEY}" password="${CONFLUENT_CLOUD_API_SECRET}";
+      KAFKA_CLUSTERS_0_SCHEMAREGISTRYAUTH_USERNAME: ${CONFLUENT_CLOUD_SR_API_KEY}
+      KAFKA_CLUSTERS_0_SCHEMAREGISTRYAUTH_PASSWORD: ${CONFLUENT_CLOUD_SR_API_SECRET}
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
