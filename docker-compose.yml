@@ -32,7 +32,7 @@ services:
       - kafka_data:/tmp/kraft-combined-logs
 
   schema-registry:
-    image: confluentinc/cp-schema-registry:7.9.0
+    image: confluentinc/cp-schema-registry:7.9.1
     hostname: schema-registry
     container_name: schema-registry
     depends_on:
