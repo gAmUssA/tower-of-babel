@@ -90,39 +90,39 @@ This task list is derived from the implementation plan in `docs/plan.md` and org
 ## Phase 3: Broken Services Implementation (Week 3)
 
 ### 3.1 Order Service - Java Serialization Failures
-- [ ] 3.1.1 Implement basic Spring Boot application structure
-- [ ] 3.1.2 Create `OrderController` with REST endpoints
-- [ ] 3.1.3 Implement Java Object Serialization producer
-- [ ] 3.1.4 Add configuration for different serialization modes
-- [ ] 3.1.5 Create `/orders/broken` endpoint for intentional failures
-- [ ] 3.1.6 Add health check endpoint
-- [ ] 3.1.7 Configure application port 9080
+- [x] 3.1.1 Implement basic Spring Boot application structure
+- [x] 3.1.2 Create `OrderController` with REST endpoints
+- [x] 3.1.3 Implement Java Object Serialization producer
+- [x] 3.1.4 Add configuration for different serialization modes
+- [x] 3.1.5 Create `/orders/broken` endpoint for intentional failures
+- [x] 3.1.6 Add health check endpoint
+- [x] 3.1.7 Configure application port 9080
 
 ### 3.2 Inventory Service - JSON Deserialization Issues
-- [ ] 3.2.1 Implement basic FastAPI application structure
-- [ ] 3.2.2 Create Kafka consumer for order events
-- [ ] 3.2.3 Implement JSON deserializer with field name mismatches
-- [ ] 3.2.4 Create API endpoints for inventory status
-- [ ] 3.2.5 Add error handling for deserialization failures
-- [ ] 3.2.6 Configure service port 9000
-- [ ] 3.2.7 Add health check endpoint
+- [x] 3.2.1 Implement basic FastAPI application structure
+- [x] 3.2.2 Create Kafka consumer for order events
+- [x] 3.2.3 Implement JSON deserializer with field name mismatches
+- [x] 3.2.4 Create API endpoints for inventory status
+- [x] 3.2.5 Add error handling for deserialization failures
+- [x] 3.2.6 Configure service port 9000
+- [x] 3.2.7 Add health check endpoint
 
 ### 3.3 Analytics API - Type Inconsistency Failures
-- [ ] 3.3.1 Implement basic Express + TypeScript application
-- [ ] 3.3.2 Create Kafka consumer for analytics events
-- [ ] 3.3.3 Implement type mismatch scenarios (string vs number)
-- [ ] 3.3.4 Create analytics dashboard endpoints
-- [ ] 3.3.5 Add real-time data visualization
-- [ ] 3.3.6 Configure service port 9300
-- [ ] 3.3.7 Add health check endpoint
+- [x] 3.3.1 Implement basic Express + TypeScript application
+- [x] 3.3.2 Create Kafka consumer for analytics events
+- [x] 3.3.3 Implement type mismatch scenarios (string vs number)
+- [x] 3.3.4 Create analytics dashboard endpoints
+- [x] 3.3.5 Add real-time data visualization
+- [x] 3.3.6 Configure service port 9300
+- [x] 3.3.7 Add health check endpoint
 
 ### 3.4 Failure Scenario Testing
-- [ ] 3.4.1 Test Java serialization → Python deserialization failure
-- [ ] 3.4.2 Test JSON field name mismatch failures
-- [ ] 3.4.3 Test type inconsistency failures
-- [ ] 3.4.4 Ensure error messages are educational
-- [ ] 3.4.5 Create scripts to trigger specific failure scenarios
-- [ ] 3.4.6 Document expected vs actual behavior for demo
+- [x] 3.4.1 Test Java serialization → Python deserialization failure
+- [x] 3.4.2 Test JSON field name mismatch failures
+- [x] 3.4.3 Test type inconsistency failures
+- [x] 3.4.4 Ensure error messages are educational
+- [x] 3.4.5 Create scripts to trigger specific failure scenarios
+- [x] 3.4.6 Document expected vs actual behavior for demo
 
 ---
 

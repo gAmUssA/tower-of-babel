@@ -100,6 +100,9 @@
 </head>
 <body>
     <div class="container">
+        <div id="error-container" style="display: none; background-color: #ffebee; color: #c62828; padding: 10px; margin-bottom: 15px; border-radius: 4px; border-left: 4px solid #c62828;">
+            <strong>Error:</strong> <span id="error-message"></span>
+        </div>
         <h1>Analytics Dashboard</h1>
         
         <div class="stats-container">
@@ -155,7 +158,7 @@
         function updateStats() {
             document.getElementById('total-orders').textContent = orders.length;
             
-            const revenue = orders.reduce((sum, order) => sum + order.amount, 0);
+            const revenue = orders.reduce((sum, order) => sum + (parseFloat(order.amount) || 0), 0);
             document.getElementById('total-revenue').textContent = `$${revenue.toFixed(2)}`;
             
             const avgOrder = orders.length > 0 ? revenue / orders.length : 0;
@@ -198,8 +201,8 @@
                 
                 tr.innerHTML = `
                     <td>${order.orderId}</td>
-                    <td>${order.userId}</td>
-                    <td>$${order.amount.toFixed(2)}</td>
+                    <td>${order.userId || 'N/A'}</td>
+                    <td>$${(parseFloat(order.amount) || 0).toFixed(2)}</td>
                     <td><span class="status ${statusClass}">${order.status}</span></td>
                     <td>${formattedDate}</td>
                 `;
@@ -210,21 +213,39 @@
         
         // Load initial data
         fetch('/api/messages/recent')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
+                console.log('Received data:', data);
                 if (data.messages && data.messages.length > 0) {
                     orders = data.messages;
-                    orders.forEach(order => users.add(order.userId));
+                    orders.forEach(order => {
+                        if (order.userId) {
+                            users.add(order.userId);
+                        }
+                    });
                     updateStats();
                     updateOrdersTable();
+                } else {
+                    console.log('No messages found in data:', data);
                 }
             })
-            .catch(error => console.error('Error fetching messages:', error));
+            .catch(error => {
+                console.error('Error fetching messages:', error);
+                document.getElementById('error-message').textContent = `Error: ${error.message}`;
+                document.getElementById('error-container').style.display = 'block';
+            });
         
         // Listen for new orders
         socket.on('new-order', (order) => {
             orders.push(order);
-            users.add(order.userId);
+            if (order.userId) {
+                users.add(order.userId);
+            }
             updateStats();
             updateOrdersTable();
         });

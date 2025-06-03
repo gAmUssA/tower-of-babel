@@ -4,12 +4,13 @@
   "description": "Analytics API for Kafka Schema Registry Demo",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && npm run copy-public",
     "start": "node dist/index.js",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "test": "jest",
     "generate-types": "node src/scripts/generate-types.js",
-    "prebuild": "npm run generate-types"
+    "prebuild": "npm run generate-types",
+    "copy-public": "mkdir -p dist/public && cp -r src/public/* dist/public/"
   },
   "keywords": [
     "kafka",

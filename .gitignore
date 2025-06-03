@@ -77,3 +77,4 @@ logs/
 # Misc
 .DS_Store
 Thumbs.db
+services/inventory-service/.venv
