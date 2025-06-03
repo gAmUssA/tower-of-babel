@@ -126,34 +126,41 @@ This task list is derived from the implementation plan in `docs/plan.md` and org
 
 ---
 
-## Phase 4: Schema Registry Integration (Week 4)
+## Phase 4: Schema Registry Integration (Week 4) ✅
 
-### 4.1 Avro Producer Implementation
-- [ ] 4.1.1 Replace Java serialization with Avro serialization in Order Service
-- [ ] 4.1.2 Configure Confluent Avro serializer
-- [ ] 4.1.3 Use generated POJOs instead of manual classes
-- [ ] 4.1.4 Add Schema Registry URL configuration
-- [ ] 4.1.5 Test message production with Avro format
+### 4.1 Avro Producer Implementation ✅
+- [x] 4.1.1 Replace Java serialization with Avro serialization in Order Service
+- [x] 4.1.2 Configure Confluent Avro serializer
+- [x] 4.1.3 Use generated POJOs instead of manual classes
+- [x] 4.1.4 Add Schema Registry URL configuration
+- [x] 4.1.5 Test message production with Avro format
 
-### 4.2 Avro Consumer Implementation
-- [ ] 4.2.1 Replace JSON deserializer with Avro in Inventory Service
-- [ ] 4.2.2 Configure Confluent Avro deserializer
-- [ ] 4.2.3 Use generated Python dataclasses
-- [ ] 4.2.4 Add Schema Registry configuration
-- [ ] 4.2.5 Test message consumption with Avro format
+### 4.2 Avro Consumer Implementation ✅
+- [x] 4.2.1 Replace JSON deserializer with Avro in Inventory Service
+- [x] 4.2.2 Configure Confluent Avro deserializer
+- [x] 4.2.3 Use generated Python dataclasses
+- [x] 4.2.4 Add Schema Registry configuration
+- [x] 4.2.5 Test message consumption with Avro format
 
-### 4.3 Analytics Service Avro Integration
-- [ ] 4.3.1 Replace manual types with generated TypeScript interfaces
-- [ ] 4.3.2 Configure Avro deserializer for Node.js
-- [ ] 4.3.3 Update dashboard to use generated types
-- [ ] 4.3.4 Test end-to-end Avro message flow
+### 4.3 Analytics Service Avro Integration ✅
+- [x] 4.3.1 Replace manual types with generated TypeScript interfaces
+- [x] 4.3.2 Configure Avro deserializer for Node.js
+- [x] 4.3.3 Update dashboard to use generated types
+- [x] 4.3.4 Test end-to-end Avro message flow
 
-### 4.4 End-to-End Validation
-- [ ] 4.4.1 Test complete message flow: Java → Python → Node.js
-- [ ] 4.4.2 Validate all services use generated code (no manual classes)
-- [ ] 4.4.3 Verify type safety at compile time
-- [ ] 4.4.4 Test Schema Registry subject registration
-- [ ] 4.4.5 Validate message compatibility across languages
+### 4.4 End-to-End Validation ✅
+- [x] 4.4.1 Test complete message flow: Java → Python → Node.js
+- [x] 4.4.2 Validate all services use generated code (no manual classes)
+- [x] 4.4.3 Verify type safety at compile time
+- [x] 4.4.4 Test Schema Registry subject registration
+- [x] 4.4.5 Validate message compatibility across languages
+
+### 4.5 Additional Improvements ✅
+- [x] 4.5.1 Fix Inventory Service Avro integration issues with confluent-kafka
+- [x] 4.5.2 Create Python smoke test for Inventory Service
+- [x] 4.5.3 Integrate smoke test into GitHub Actions workflow
+- [x] 4.5.4 Fix Analytics dashboard timestamp parsing issues
+- [x] 4.5.5 Enhance phase4-demo.sh script for better reliability
 
 ---
 

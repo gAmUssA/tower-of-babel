@@ -152,6 +152,40 @@ schemas/
 - Type mismatches caught at compile time
 - Clear performance improvements visible
 
+#### 3.2.1 Schema Registry Integration Implementation
+
+**Order Service (Java/Kotlin):**
+- Added Avro serialization using generated Avro classes
+- Configured `KafkaAvroSerializer` with Schema Registry URL
+- Created a new REST endpoint `/orders/avro` to produce Kafka messages with Avro
+- Fixed `SPECIFIC_AVRO_READER_CONFIG` lint error by using string literal `"specific.avro.reader"`
+
+**Inventory Service (Python):**
+- Added Avro deserialization with Schema Registry integration
+- Implemented `AvroOrderKafkaConsumer` class
+- Added dynamic schema fetching from Schema Registry
+- Updated endpoints to filter inventory by source (json, java, avro)
+- Run both JSON and Avro consumers in parallel with separate consumer groups
+- Added smoke test for validating Avro dependencies and functionality
+
+**Analytics API (Node.js/TypeScript):**
+- Added Avro deserialization with Confluent Schema Registry client
+- Implemented `AvroKafkaConsumerService` class
+- Updated the Order model to include the `source` property
+- Added routes to expose Avro-specific recent messages
+- Enhanced error reporting and monitoring
+
+**Configuration:**
+- `KAFKA_BOOTSTRAP_SERVERS` (default: localhost:29092)
+- `KAFKA_TOPIC` (default: orders)
+- `KAFKA_GROUP_ID` (default varies per service)
+- `SCHEMA_REGISTRY_URL` (default: http://localhost:8081)
+
+**Testing Tools:**
+- Created comprehensive Phase 4 demo script for validating integration
+- Implemented inventory-service smoke test to verify dependencies
+- Integrated smoke tests into GitHub Actions workflow
+
 ### 3.3 "Safe Evolution" - Schema Compatibility
 
 **Rationale:** Shows how Schema Registry enables safe schema evolution while maintaining backward/forward compatibility.

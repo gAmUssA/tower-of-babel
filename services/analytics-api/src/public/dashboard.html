@@ -179,7 +179,11 @@
             tbody.innerHTML = '';
             
             // Sort orders by timestamp (newest first)
-            const sortedOrders = [...orders].sort((a, b) => b.timestamp - a.timestamp);
+            const sortedOrders = [...orders].sort((a, b) => {
+                const dateA = new Date(a.createdAt || 0);
+                const dateB = new Date(b.createdAt || 0);
+                return dateB.getTime() - dateA.getTime();
+            });
             
             // Show only the 10 most recent orders
             const recentOrders = sortedOrders.slice(0, 10);
@@ -188,8 +192,13 @@
                 const tr = document.createElement('tr');
                 
                 // Format timestamp
-                const date = new Date(order.timestamp);
-                const formattedDate = date.toLocaleString();
+                let formattedDate = 'N/A';
+                try {
+                    const date = new Date(order.createdAt);
+                    formattedDate = date.toLocaleString();
+                } catch (e) {
+                    console.error('Error parsing date:', e, order.createdAt);
+                }
                 
                 // Determine status class
                 let statusClass = 'status-pending';

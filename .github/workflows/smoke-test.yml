@@ -74,6 +74,9 @@ jobs:
       - name: Build Inventory Service
         run: |
           cd services/inventory-service
+          # Install dependencies from requirements.txt
+          pip install -r requirements.txt
+          # Install the package in development mode
           pip install -e .
       
       # Build Analytics API
@@ -84,7 +87,7 @@ jobs:
           npm run build
       
       # Run smoke tests
-      - name: Run smoke tests
+      - name: Run basic code generation smoke tests
         run: |
           # Verify generated code exists after build
           test -d services/order-service/build/generated-main-avro-java/com/company/orders || exit 1
@@ -92,4 +95,22 @@ jobs:
           touch services/inventory-service/src/generated/__init__.py
           test -f services/analytics-api/src/generated/index.ts || exit 1
           
-          echo "✅ Smoke tests passed!"
+          echo "✅ Basic code generation smoke tests passed!"
+          
+      # Run inventory service smoke test
+      - name: Run Inventory Service smoke test
+        run: |
+          echo "🔥 Running Inventory Service smoke tests..."
+          cd services/inventory-service
+          chmod +x scripts/smoke_test.py
+          python scripts/smoke_test.py
+          echo "✅ Inventory Service smoke tests passed!"
+          
+      # Run Analytics API smoke test
+      - name: Run Analytics API smoke test
+        run: |
+          echo "🔥 Running Analytics API smoke tests..."
+          cd services/analytics-api
+          chmod +x scripts/smoke-test.js
+          node scripts/smoke-test.js
+          echo "✅ Analytics API smoke tests passed!"

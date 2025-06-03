@@ -20,6 +20,9 @@ export interface Order {
   
   // Intentional type inconsistency: createdAt is Instant in Java but string here
   createdAt: string;
+  
+  // Source of the message (json, java, avro)
+  source?: string;
 }
 
 export interface OrderItem {

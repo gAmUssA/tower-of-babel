@@ -58,6 +58,24 @@ class OrderController(private val orderService: OrderService) {
         val savedOrder = orderService.saveOrderWithJavaSerialization(order)
         return ResponseEntity.ok(savedOrder)
     }
+    
+    @PostMapping("/avro")
+    fun createOrderWithAvro(@RequestBody orderRequest: OrderRequest): ResponseEntity<Order> {
+        val order = Order(
+            userId = orderRequest.userId,
+            amount = orderRequest.amount,
+            status = "CREATED",
+            items = orderRequest.items.map { 
+                OrderItem(
+                    productId = it.productId,
+                    quantity = it.quantity,
+                    price = it.price
+                )
+            }
+        )
+        val savedOrder = orderService.saveOrderWithAvroSerialization(order)
+        return ResponseEntity.ok(savedOrder)
+    }
 }
 
 data class OrderRequest(

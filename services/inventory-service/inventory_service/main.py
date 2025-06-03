@@ -8,14 +8,14 @@ import threading
 import time
 from typing import Dict, List
 
-import os
 # Import dotenv correctly
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from inventory_service.consumer import OrderKafkaConsumer
+from inventory_service.consumer.avro_kafka_consumer import AvroOrderKafkaConsumer
 
 # Configure logging
 logging.basicConfig(
@@ -31,6 +31,7 @@ load_dotenv()
 KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'localhost:29092')
 KAFKA_TOPIC = os.getenv('KAFKA_TOPIC', 'orders')
 KAFKA_GROUP_ID = os.getenv('KAFKA_GROUP_ID', 'inventory-service')
+SCHEMA_REGISTRY_URL = os.getenv('SCHEMA_REGISTRY_URL', 'http://localhost:8081')
 
 # Create FastAPI app
 app = FastAPI(
@@ -51,8 +52,9 @@ app.add_middleware(
 # In-memory inventory store (for demo purposes)
 inventory_store: Dict[str, Dict] = {}
 
-# Kafka consumer instance
+# Kafka consumer instances
 kafka_consumer = None
+avro_kafka_consumer = None
 
 class InventoryStatus(BaseModel):
     """Inventory status response model"""
@@ -73,10 +75,10 @@ max_errors_to_track = 10
 
 @app.on_event("startup")
 async def startup_event():
-    """Start Kafka consumer on application startup"""
-    global kafka_consumer
+    """Start Kafka consumers on application startup"""
+    global kafka_consumer, avro_kafka_consumer
     try:
-        logger.info("Starting Kafka consumer")
+        logger.info("Starting regular Kafka consumer")
         kafka_consumer = OrderKafkaConsumer(
             bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
             topic=KAFKA_TOPIC,
@@ -84,19 +86,36 @@ async def startup_event():
             inventory_store=inventory_store
         )
         kafka_consumer.start()
-        logger.info("Kafka consumer started successfully")
+        logger.info("Regular Kafka consumer started successfully")
+        
+        # Start Avro Kafka consumer with different group ID to get all messages
+        logger.info("Starting Avro Kafka consumer")
+        avro_kafka_consumer = AvroOrderKafkaConsumer(
+            bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
+            topic=KAFKA_TOPIC,
+            group_id=f"{KAFKA_GROUP_ID}-avro",
+            schema_registry_url=SCHEMA_REGISTRY_URL,
+            inventory_store=inventory_store
+        )
+        avro_kafka_consumer.start()
+        logger.info("Avro Kafka consumer started successfully")
     except Exception as e:
         logger.error(f"Failed to start Kafka consumer: {e}")
         # Still allow the app to start even if Kafka consumer fails
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    """Stop Kafka consumer on application shutdown"""
-    global kafka_consumer
+    """Stop Kafka consumers on application shutdown"""
+    global kafka_consumer, avro_kafka_consumer
     if kafka_consumer:
-        logger.info("Stopping Kafka consumer")
+        logger.info("Stopping regular Kafka consumer")
         kafka_consumer.stop()
-        logger.info("Kafka consumer stopped")
+        logger.info("Regular Kafka consumer stopped")
+    
+    if avro_kafka_consumer:
+        logger.info("Stopping Avro Kafka consumer")
+        avro_kafka_consumer.stop()
+        logger.info("Avro Kafka consumer stopped")
 
 @app.get("/")
 async def root():
@@ -106,12 +125,17 @@ async def root():
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
-    global kafka_consumer
+    global kafka_consumer, avro_kafka_consumer
     kafka_status = "connected" if kafka_consumer and kafka_consumer.consumer else "disconnected"
+    avro_status = "connected" if avro_kafka_consumer and avro_kafka_consumer.consumer else "disconnected"
     return {
         "status": "healthy",
         "kafka": kafka_status,
-        "error_count": kafka_consumer.get_error_count() if kafka_consumer else 0
+        "avro_kafka": avro_status,
+        "error_count": {
+            "json": kafka_consumer.get_error_count() if kafka_consumer else 0,
+            "avro": avro_kafka_consumer.get_error_count() if avro_kafka_consumer else 0
+        }
     }
 
 @app.get("/inventory/{order_id}")
@@ -122,21 +146,31 @@ async def get_inventory_status(order_id: str):
     return inventory_store[order_id]
 
 @app.get("/inventory")
-async def get_all_inventory():
-    """Get all inventory items"""
+async def get_all_inventory(source: str = Query(None, description="Filter by source (json, java, avro)")):
+    """Get all inventory items with optional filtering by source"""
+    if source:
+        # Filter inventory items by source
+        return [item for item in inventory_store.values() if item.get("source", "") == source]
     return list(inventory_store.values())
 
 @app.get("/errors")
 async def get_error_stats():
     """Get error statistics"""
-    global kafka_consumer
-    if not kafka_consumer:
-        return ErrorStats(error_count=0, last_errors=["Kafka consumer not started"])
+    global kafka_consumer, avro_kafka_consumer
     
-    return ErrorStats(
-        error_count=kafka_consumer.get_error_count(),
-        last_errors=last_errors
-    )
+    if not kafka_consumer and not avro_kafka_consumer:
+        return {"error": "No Kafka consumers started"}
+    
+    return {
+        "json_consumer": {
+            "error_count": kafka_consumer.get_error_count() if kafka_consumer else 0,
+            "last_errors": last_errors
+        },
+        "avro_consumer": {
+            "error_count": avro_kafka_consumer.get_error_count() if avro_kafka_consumer else 0,
+            "last_errors": []
+        }
+    }
 
 # Run the application with uvicorn when this script is executed directly
 if __name__ == "__main__":
