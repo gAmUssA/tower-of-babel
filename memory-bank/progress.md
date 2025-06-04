@@ -1,6 +1,14 @@
 # Tower of Babel Progress Tracking
 
 ## Completed Tasks
+- ✅ Fixed service configuration issues
+  - Corrected port configurations in all scripts
+    - Inventory Service: port 9000 (was incorrectly checked as 8000)
+    - Order Service: port 9080 (was incorrectly checked as 8080)
+    - Analytics API: port 9300 (correct)
+  - Fixed health check endpoints to use correct ports
+  - Fixed schema subject names to use correct topic-value convention (orders-value)
+  - Updated documentation and scripts for consistency
 - ✅ Fixed Python Inventory Service dependency issues
   - Created Python virtual environment
   - Installed required dependencies

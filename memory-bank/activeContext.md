@@ -1,6 +1,17 @@
 # Tower of Babel Active Context
 
 ## Current Focus
+[2025-06-04 05:20:00] - **Service Configuration Fixes**
+
+Fixed critical service configuration issues:
+
+- Corrected port configurations in all scripts:
+  - Inventory Service: port 9000 (was incorrectly set as 8000)
+  - Order Service: port 9080 (was incorrectly set as 8080)
+  - Analytics API: port 9300
+- Fixed schema subject names to match topic naming convention (orders-value)
+- Updated health check endpoints to use correct ports
+
 [2025-06-04 02:02:00] - **Phase 5 Implementation Complete**
 
 Successfully implemented all Phase 5 tasks for Evolution and Automation:
