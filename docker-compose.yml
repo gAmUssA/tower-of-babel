@@ -1,6 +1,6 @@
 services:
   kafka:
-    image: confluentinc/cp-kafka:7.9.0
+    image: confluentinc/cp-kafka:7.9.1
     hostname: kafka
     container_name: kafka
     ports:
@@ -51,7 +51,7 @@ services:
       retries: 10
 
   kafka-ui:
-    image: provectuslabs/kafka-ui:latest
+    image: ghcr.io/kafbat/kafka-ui:latest
     container_name: kafka-ui
     depends_on:
       - kafka

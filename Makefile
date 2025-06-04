@@ -161,6 +161,27 @@ phase3-demo: ## 🎭 Run Phase 3 Demo (all scenarios)
 	@echo "$(GREEN)- make phase3-json-mismatch$(NC)"
 	@echo "$(GREEN)- make phase3-type-inconsistency$(NC)"
 
+demo-broken: ## 💥 Start failure scenarios demo
+	@echo "$(GREEN)💥 Starting failure scenarios demo...$(NC)"
+	@echo "$(YELLOW)This will demonstrate serialization issues across languages$(NC)"
+	./scripts/start-broken-services.sh
+	@echo "$(GREEN)🎭 Demo ready! Run failure scenarios with:$(NC)"
+	@echo "$(GREEN)- make phase3-java-serialization$(NC)"
+	@echo "$(GREEN)- make phase3-json-mismatch$(NC)"
+	@echo "$(GREEN)- make phase3-type-inconsistency$(NC)"
+
+demo-fixed: ## ✨ Switch to Avro serialization
+	@echo "$(GREEN)✨ Switching to Avro serialization...$(NC)"
+	@echo "$(YELLOW)This will demonstrate how Schema Registry fixes serialization issues$(NC)"
+	./scripts/start-avro-services.sh
+	@echo "$(GREEN)🎉 Avro demo ready! Run with:$(NC)"
+	@echo "$(GREEN)- make phase4-demo$(NC)"
+
+demo-evolution: ## 🧬 Demonstrate schema evolution
+	@echo "$(GREEN)🧬 Starting schema evolution demo...$(NC)"
+	@echo "$(YELLOW)This will show backward/forward compatibility with schema changes$(NC)"
+	./scripts/evolve-schema.sh
+	@echo "$(GREEN)🎉 Schema evolution demo complete!$(NC)"
 
 phase3-java-serialization: ## 🎭 Demo Java serialization failures
 	@echo "$(GREEN)🎭 Running Java Serialization Failure Demo...$(NC)"

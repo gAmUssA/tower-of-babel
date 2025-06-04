@@ -167,42 +167,42 @@ This task list is derived from the implementation plan in `docs/plan.md` and org
 ## Phase 5: Evolution and Automation (Week 5)
 
 ### 5.1 Schema Evolution Implementation
-- [ ] 5.1.1 Create order-event.avsc V2 with optional fields
-- [ ] 5.1.2 Test backward compatibility (old consumers, new producers)
-- [ ] 5.1.3 Test forward compatibility (new consumers, old producers)
-- [ ] 5.1.4 Create incompatible schema change (V3) for rejection demo
-- [ ] 5.1.5 Test Schema Registry compatibility validation
-- [ ] 5.1.6 Document evolution scenarios for demo
+- [x] 5.1.1 Create order-event.avsc V2 with optional fields
+- [x] 5.1.2 Test backward compatibility (old consumers, new producers)
+- [x] 5.1.3 Test forward compatibility (new consumers, old producers)
+- [x] 5.1.4 Create incompatible schema change (V3) for rejection demo
+- [x] 5.1.5 Test Schema Registry compatibility validation
+- [x] 5.1.6 Document evolution scenarios for demo
 
 ### 5.2 Makefile Automation
-- [ ] 5.2.1 Create Makefile with emoji and color support
-- [ ] 5.2.2 Implement `make help` with command documentation
-- [ ] 5.2.3 Implement `make setup` for Docker environment
-- [ ] 5.2.4 Implement `make setup-cloud` for Confluent Cloud
-- [ ] 5.2.5 Implement `make demo-broken` to start failure scenarios
-- [ ] 5.2.6 Implement `make demo-fixed` to switch to Avro
-- [ ] 5.2.7 Implement `make demo-evolution` for schema changes
-- [ ] 5.2.8 Implement `make demo-reset` for clean state
-- [ ] 5.2.9 Implement `make generate` for code generation
-- [ ] 5.2.10 Implement `make build` for all services
-- [ ] 5.2.11 Implement `make clean` for cleanup
-- [ ] 5.2.12 Implement `make status` for service monitoring
+- [x] 5.2.1 Create Makefile with emoji and color support
+- [x] 5.2.2 Implement `make help` with command documentation
+- [x] 5.2.3 Implement `make setup` for Docker environment
+- [x] 5.2.4 Implement `make setup-cloud` for Confluent Cloud
+- [x] 5.2.5 Implement `make demo-broken` to start failure scenarios
+- [x] 5.2.6 Implement `make demo-fixed` to switch to Avro
+- [x] 5.2.7 Implement `make demo-evolution` for schema changes
+- [x] 5.2.8 Implement `make demo-reset` for clean state
+- [x] 5.2.9 Implement `make generate` for code generation
+- [x] 5.2.10 Implement `make build` for all services
+- [x] 5.2.11 Implement `make clean` for cleanup
+- [x] 5.2.12 Implement `make status` for service monitoring
 
 ### 5.3 Demo State Management
-- [ ] 5.3.1 Create `scripts/cleanup-topics.sh`
-- [ ] 5.3.2 Create `scripts/cleanup-schemas.sh`
-- [ ] 5.3.3 Create `scripts/start-broken-services.sh`
-- [ ] 5.3.4 Create `scripts/start-avro-services.sh`
-- [ ] 5.3.5 Create `scripts/stop-broken-services.sh`
-- [ ] 5.3.6 Create `scripts/evolve-schema.sh`
-- [ ] 5.3.7 Test demo reset time (target: <30 seconds)
+- [x] 5.3.1 Create `scripts/cleanup-topics.sh`
+- [x] 5.3.2 Create `scripts/cleanup-schemas.sh`
+- [x] 5.3.3 Create `scripts/start-broken-services.sh`
+- [x] 5.3.4 Create `scripts/start-avro-services.sh`
+- [x] 5.3.5 Create `scripts/stop-broken-services.sh`
+- [x] 5.3.6 Create `scripts/evolve-schema.sh`
+- [x] 5.3.7 Test demo reset time (target: <30 seconds)
 
 ### 5.4 Code Generation Automation
-- [ ] 5.4.1 Implement `make demo-codegen` command
-- [ ] 5.4.2 Show schema definition in demo
-- [ ] 5.4.3 Demonstrate live code generation
-- [ ] 5.4.4 Show generated artifacts in all languages
-- [ ] 5.4.5 Demonstrate schema evolution with code regeneration
+- [x] 5.4.1 Implement `make demo-codegen` command
+- [x] 5.4.2 Show schema definition in demo
+- [x] 5.4.3 Demonstrate live code generation
+- [x] 5.4.4 Show generated artifacts in all languages
+- [x] 5.4.5 Demonstrate schema evolution with code regeneration
 
 ---
 
