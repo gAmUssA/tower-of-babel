@@ -3,7 +3,7 @@ uvicorn==0.23.2
 python-dotenv==1.0.0
 confluent-kafka==2.10.0
 pydantic==2.11.5
-pytest==7.4.3
+pytest==7.4.4
 httpx==0.28.1
 avro-python3==1.10.2
 requests==2.31.0
