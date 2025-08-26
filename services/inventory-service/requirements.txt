@@ -6,4 +6,4 @@ pydantic==2.11.7
 pytest==7.4.4
 httpx==0.28.1
 avro-python3==1.10.2
-requests==2.32.4
+requests==2.32.5
