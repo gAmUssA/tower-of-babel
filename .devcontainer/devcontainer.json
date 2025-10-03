@@ -1,5 +1,5 @@
 {
-  "name": "Java",
+  "name": "Tower of Babel - Java, Python, Node.js",
   "image": "mcr.microsoft.com/devcontainers/java:1-21",
   "features": {
     "ghcr.io/devcontainers/features/java:1": {
@@ -7,6 +7,15 @@
       "installMaven": "true",
       "mavenVersion": "3.8.6",
       "installGradle": "true"
+    },
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.12",
+      "installTools": true
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20",
+      "nodeGypDependencies": true,
+      "installYarnUsingApt": false
     }
   }
 }
