@@ -13,6 +13,7 @@ Multi-language microservices demo showcasing Schema Registry integration with:
 ## Build & Configuration
 
 ### Prerequisites
+
 - Docker and Docker Compose
 - Java 17+
 - Python 3.9+ (project uses Python 3.12)
@@ -73,7 +74,8 @@ When evolving schemas, follow Avro backward compatibility rules:
 - Never remove required fields or change field types
 
 Example from `schemas/v2/order-event.avsc`:
-```json
+
+```json lines
 {"name": "orderTimestamp", "type": ["null", "long"], "default": null}
 {"name": "metadata", "type": ["null", {"type": "map", "values": "string"}], "default": null}
 ```
@@ -92,7 +94,8 @@ cd services/inventory-service && python3 scripts/generate_classes.py
 cd services/analytics-api && npm run generate-types
 ```
 
-**Critical**: Always regenerate code after schema changes. The build process automatically copies schemas from `schemas/v1/` to each service before generation.
+**Critical**: Always regenerate code after schema changes. 
+The build process automatically copies schemas from `schemas/v1/` to each service before generation.
 
 ## Testing
 
@@ -113,6 +116,7 @@ cd services/order-service
 **Test Location**: `src/test/kotlin/com/company/orders/`
 
 **Example Test Structure**:
+
 ```kotlin
 package com.company.orders.model
 
@@ -136,6 +140,7 @@ class OrderTest {
 ```
 
 **Key Points**:
+- 
 - Uses Kotlin backtick syntax for descriptive test names
 - Follows Given-When-Then pattern
 - JUnit Platform configured in `build.gradle.kts`
@@ -159,6 +164,7 @@ python -m pytest -k "test_name"    # Run tests matching pattern
 **Test Location**: `tests/` directory (separate from package)
 
 **Example Test Structure**:
+
 ```python
 import pytest
 from inventory_service.utils import validate_order_data
