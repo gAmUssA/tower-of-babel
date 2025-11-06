@@ -117,7 +117,8 @@ class AvroOrderKafkaConsumer:
             # Check magic byte (should be 0)
             magic_byte = message_bytes[0]
             if magic_byte != 0:
-                logger.warning(f"Unexpected magic byte: {magic_byte}, attempting to decode anyway")
+                logger.debug(f"Received non-Avro message (magic byte: {magic_byte}), skipping")
+                return
                 
             # Extract schema ID (4 bytes after magic byte)
             schema_id = int.from_bytes(message_bytes[1:5], byteorder='big')

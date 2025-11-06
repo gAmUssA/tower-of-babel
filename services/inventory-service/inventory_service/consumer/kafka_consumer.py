@@ -103,6 +103,11 @@ class OrderKafkaConsumer:
         Intentionally uses different field names than the producer to demonstrate deserialization issues.
         """
         try:
+            # Check if this is an Avro message (magic byte 0x00)
+            if len(message_bytes) > 0 and message_bytes[0] == 0:
+                logger.debug("Received Avro message, skipping in JSON consumer")
+                return
+
             # First try to deserialize as JSON
             try:
                 # Attempt to decode as JSON

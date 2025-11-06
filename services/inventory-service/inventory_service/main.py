@@ -6,6 +6,7 @@ import os
 import logging
 import threading
 import time
+from contextlib import asynccontextmanager
 from typing import Dict, List
 
 # Import dotenv correctly
@@ -33,22 +34,6 @@ KAFKA_TOPIC = os.getenv('KAFKA_TOPIC', 'orders')
 KAFKA_GROUP_ID = os.getenv('KAFKA_GROUP_ID', 'inventory-service')
 SCHEMA_REGISTRY_URL = os.getenv('SCHEMA_REGISTRY_URL', 'http://localhost:8081')
 
-# Create FastAPI app
-app = FastAPI(
-    title="Inventory Service",
-    description="Inventory Service for Kafka Schema Registry Demo",
-    version="0.1.0",
-)
-
-# Enable CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 # In-memory inventory store (for demo purposes)
 inventory_store: Dict[str, Dict] = {}
 
@@ -56,27 +41,17 @@ inventory_store: Dict[str, Dict] = {}
 kafka_consumer = None
 avro_kafka_consumer = None
 
-class InventoryStatus(BaseModel):
-    """Inventory status response model"""
-    order_id: str
-    product_id: str
-    quantity: int
-    status: str
-    user_id: str = ""
-
-class ErrorStats(BaseModel):
-    """Error statistics response model"""
-    error_count: int
-    last_errors: List[str] = []
-
 # Error tracking
 last_errors: List[str] = []
 max_errors_to_track = 10
 
-@app.on_event("startup")
-async def startup_event():
-    """Start Kafka consumers on application startup"""
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan event handler for startup and shutdown"""
     global kafka_consumer, avro_kafka_consumer
+    
+    # Startup
     try:
         logger.info("Starting regular Kafka consumer")
         kafka_consumer = OrderKafkaConsumer(
@@ -102,11 +77,10 @@ async def startup_event():
     except Exception as e:
         logger.error(f"Failed to start Kafka consumer: {e}")
         # Still allow the app to start even if Kafka consumer fails
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Stop Kafka consumers on application shutdown"""
-    global kafka_consumer, avro_kafka_consumer
+    
+    yield
+    
+    # Shutdown
     if kafka_consumer:
         logger.info("Stopping regular Kafka consumer")
         kafka_consumer.stop()
@@ -116,6 +90,39 @@ async def shutdown_event():
         logger.info("Stopping Avro Kafka consumer")
         avro_kafka_consumer.stop()
         logger.info("Avro Kafka consumer stopped")
+
+
+# Create FastAPI app with lifespan
+app = FastAPI(
+    title="Inventory Service",
+    description="Inventory Service for Kafka Schema Registry Demo",
+    version="0.1.0",
+    lifespan=lifespan
+)
+
+# Enable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+class InventoryStatus(BaseModel):
+    """Inventory status response model"""
+    order_id: str
+    product_id: str
+    quantity: int
+    status: str
+    user_id: str = ""
+
+
+class ErrorStats(BaseModel):
+    """Error statistics response model"""
+    error_count: int
+    last_errors: List[str] = []
 
 @app.get("/")
 async def root():
@@ -175,14 +182,9 @@ async def get_error_stats():
 # Run the application with uvicorn when this script is executed directly
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("inventory_service.main:app", host="0.0.0.0", port=9000, reload=True)
-
-
-if __name__ == "__main__":
-    import uvicorn
     
     uvicorn.run(
-        "main:app",
+        "inventory_service.main:app",
         host="0.0.0.0",
         port=int(os.getenv("SERVER_PORT", "9000")),
         reload=True,

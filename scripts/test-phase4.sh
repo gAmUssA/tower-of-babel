@@ -78,15 +78,16 @@ echo -e "\n${BLUE}${TEST} Test 1: Schema Registry Subject Registration${NC}"
 echo -e "${CYAN}----------------------------------------------------${NC}"
 # Check if orders-value subject exists in Schema Registry
 echo -ne "${CYAN}Checking if orders-value subject exists...${NC} "
-if curl -s http://localhost:8081/subjects/orders-value/versions | grep -q ""; then
+VERSIONS_RESPONSE=$(curl -s http://localhost:8081/subjects/orders-value/versions)
+if echo "$VERSIONS_RESPONSE" | grep -q '\['; then
     echo -e "${GREEN}${CHECK} Subject exists${NC}"
-    # Get the latest schema version
-    SCHEMA_VERSION=$(curl -s http://localhost:8081/subjects/orders-value/versions | jq '.[-1]')
+    # Get the latest schema version using the latest endpoint
+    SCHEMA_VERSION=$(curl -s http://localhost:8081/subjects/orders-value/versions/latest | jq -r '.version')
     echo -e "${CYAN}Latest schema version: ${SCHEMA_VERSION}${NC}"
-    
+
     # Get schema details
     echo -e "${CYAN}Schema details:${NC}"
-    curl -s http://localhost:8081/subjects/orders-value/versions/$SCHEMA_VERSION | jq .
+    curl -s http://localhost:8081/subjects/orders-value/versions/latest | jq .
 else
     echo -e "${RED}${CROSS} Subject not found${NC}"
     echo -e "${YELLOW}The schema has not been registered yet. It will be registered when an Avro message is produced.${NC}"
@@ -94,6 +95,13 @@ fi
 
 echo -e "\n${BLUE}${TEST} Test 2: Order Creation with Avro Serialization${NC}"
 echo -e "${CYAN}----------------------------------------------------${NC}"
+
+# Get initial error counts BEFORE creating the order
+INVENTORY_ERRORS=$(curl -s http://localhost:9000/errors | grep -o '"error_count":[0-9]*' | head -1 | cut -d':' -f2)
+INVENTORY_ERRORS=${INVENTORY_ERRORS:-0}
+ANALYTICS_ERRORS=$(curl -s http://localhost:9300/api/errors | grep -o '"errorCount":[0-9]*' | head -1 | cut -d':' -f2)
+ANALYTICS_ERRORS=${ANALYTICS_ERRORS:-0}
+
 # Create a test order
 echo -e "${CYAN}Creating test order using Avro serialization...${NC}"
 ORDER_RESPONSE=$(curl -s -X POST http://localhost:9080/orders/avro -H "Content-Type: application/json" -d '{
@@ -123,10 +131,6 @@ fi
 # Wait for processing
 echo -e "\n${YELLOW}Waiting for message propagation (5 seconds)...${NC}"
 sleep 5
-
-# Get initial error counts
-INVENTORY_ERRORS=$(curl -s http://localhost:9000/errors | grep -o '"error_count":[0-9]*' | head -1 | cut -d':' -f2)
-ANALYTICS_ERRORS=$(curl -s http://localhost:9300/api/errors | grep -o '"errorCount":[0-9]*' | head -1 | cut -d':' -f2)
 
 echo -e "\n${BLUE}${TEST} Test 3: Python Avro Deserialization${NC}"
 echo -e "${CYAN}----------------------------------------------------${NC}"
@@ -166,7 +170,9 @@ echo -e "\n${BLUE}${TEST} Test 5: Error Detection${NC}"
 echo -e "${CYAN}----------------------------------------------------${NC}"
 # Check for any new errors
 NEW_INVENTORY_ERRORS=$(curl -s http://localhost:9000/errors | grep -o '"error_count":[0-9]*' | head -1 | cut -d':' -f2)
+NEW_INVENTORY_ERRORS=${NEW_INVENTORY_ERRORS:-0}
 NEW_ANALYTICS_ERRORS=$(curl -s http://localhost:9300/api/errors | grep -o '"errorCount":[0-9]*' | head -1 | cut -d':' -f2)
+NEW_ANALYTICS_ERRORS=${NEW_ANALYTICS_ERRORS:-0}
 
 INVENTORY_ERROR_DIFF=$((NEW_INVENTORY_ERRORS - INVENTORY_ERRORS))
 ANALYTICS_ERROR_DIFF=$((NEW_ANALYTICS_ERRORS - ANALYTICS_ERRORS))
@@ -189,16 +195,16 @@ echo -e "\n${BLUE}${TEST} Test 6: Schema Validation${NC}"
 echo -e "${CYAN}----------------------------------------------------${NC}"
 # Check if orders-value subject exists now (should be created after sending a message)
 echo -ne "${CYAN}Verifying schema was registered in Schema Registry...${NC} "
-if curl -s http://localhost:8081/subjects/orders-value/versions | grep -q ""; then
+VERSIONS_RESPONSE=$(curl -s http://localhost:8081/subjects/orders-value/versions)
+if echo "$VERSIONS_RESPONSE" | grep -q '\['; then
     echo -e "${GREEN}${CHECK} Schema registered successfully${NC}"
-    # Get the latest schema version
-    SCHEMA_VERSION=$(curl -s http://localhost:8081/subjects/orders-value/versions | jq '.[-1]')
+    # Get the latest schema version and ID using the latest endpoint
+    LATEST_SCHEMA=$(curl -s http://localhost:8081/subjects/orders-value/versions/latest)
+    SCHEMA_VERSION=$(echo $LATEST_SCHEMA | jq -r '.version')
+    SCHEMA_ID=$(echo $LATEST_SCHEMA | jq -r '.id')
     echo -e "${CYAN}Schema version: ${SCHEMA_VERSION}${NC}"
-    
-    # Get schema ID
-    SCHEMA_ID=$(curl -s http://localhost:8081/subjects/orders-value/versions/$SCHEMA_VERSION | jq '.id')
     echo -e "${CYAN}Schema ID: ${SCHEMA_ID}${NC}"
-    
+
     # Get schema compatibility
     COMPATIBILITY=$(curl -s http://localhost:8081/config/orders-value)
     echo -e "${CYAN}Schema compatibility setting:${NC}"

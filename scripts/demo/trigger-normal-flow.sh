@@ -45,42 +45,14 @@ else
 fi
 
 echo
-echo -e "${BLUE}🚀 Sending order with Avro serialization...${NC}"
-
-# Create an order using the correct endpoint (Avro serialization)
-ORDER_RESPONSE=$(curl -s -X POST http://localhost:9080/orders \
-  -H "Content-Type: application/json" \
-  -d '{
-    "userId": "user123",
-    "amount": 99.99,
-    "items": [
-      {
-        "productId": "product456",
-        "quantity": 2,
-        "price": 49.99
-      }
-    ]
-  }')
-
-ORDER_ID=$(echo $ORDER_RESPONSE | grep -o '"orderId":"[^"]*"' | cut -d'"' -f4)
-
-if [ -n "$ORDER_ID" ]; then
-  echo -e "${GREEN}✅ Order created with ID: $ORDER_ID${NC}"
-else
-  echo -e "${RED}❌ Failed to create order${NC}"
-  exit 1
-fi
-
-echo
-echo -e "${YELLOW}⏳ Waiting for message processing (5 seconds)...${NC}"
-sleep 5
-
 # Get initial error counts
 INITIAL_INVENTORY_ERRORS=$(curl -s http://localhost:9000/errors)
-INITIAL_INVENTORY_ERROR_COUNT=$(echo $INITIAL_INVENTORY_ERRORS | grep -o '"error_count":[0-9]*' | cut -d':' -f2)
+INITIAL_INVENTORY_ERROR_COUNT=$(echo $INITIAL_INVENTORY_ERRORS | grep -o '"error_count":[0-9]*' | head -1 | cut -d':' -f2)
+INITIAL_INVENTORY_ERROR_COUNT=${INITIAL_INVENTORY_ERROR_COUNT:-0}
 
 INITIAL_ANALYTICS_ERRORS=$(curl -s http://localhost:9300/api/errors)
-INITIAL_ANALYTICS_ERROR_COUNT=$(echo $INITIAL_ANALYTICS_ERRORS | grep -o '"errorCount":[0-9]*' | cut -d':' -f2)
+INITIAL_ANALYTICS_ERROR_COUNT=$(echo $INITIAL_ANALYTICS_ERRORS | grep -o '"errorCount":[0-9]*' | head -1 | cut -d':' -f2)
+INITIAL_ANALYTICS_ERROR_COUNT=${INITIAL_ANALYTICS_ERROR_COUNT:-0}
 
 echo -e "${YELLOW}ℹ️ Initial error counts - Inventory: $INITIAL_INVENTORY_ERROR_COUNT, Analytics: $INITIAL_ANALYTICS_ERROR_COUNT${NC}"
 
@@ -117,7 +89,8 @@ sleep 5
 
 # Check for new errors in Inventory Service
 FINAL_INVENTORY_ERRORS=$(curl -s http://localhost:9000/errors)
-FINAL_INVENTORY_ERROR_COUNT=$(echo $FINAL_INVENTORY_ERRORS | grep -o '"error_count":[0-9]*' | cut -d':' -f2)
+FINAL_INVENTORY_ERROR_COUNT=$(echo $FINAL_INVENTORY_ERRORS | grep -o '"error_count":[0-9]*' | head -1 | cut -d':' -f2)
+FINAL_INVENTORY_ERROR_COUNT=${FINAL_INVENTORY_ERROR_COUNT:-0}
 NEW_INVENTORY_ERRORS=$((FINAL_INVENTORY_ERROR_COUNT - INITIAL_INVENTORY_ERROR_COUNT))
 
 echo
@@ -134,7 +107,8 @@ fi
 
 # Check for new errors in Analytics API
 FINAL_ANALYTICS_ERRORS=$(curl -s http://localhost:9300/api/errors)
-FINAL_ANALYTICS_ERROR_COUNT=$(echo $FINAL_ANALYTICS_ERRORS | grep -o '"errorCount":[0-9]*' | cut -d':' -f2)
+FINAL_ANALYTICS_ERROR_COUNT=$(echo $FINAL_ANALYTICS_ERRORS | grep -o '"errorCount":[0-9]*' | head -1 | cut -d':' -f2)
+FINAL_ANALYTICS_ERROR_COUNT=${FINAL_ANALYTICS_ERROR_COUNT:-0}
 NEW_ANALYTICS_ERRORS=$((FINAL_ANALYTICS_ERROR_COUNT - INITIAL_ANALYTICS_ERROR_COUNT))
 
 echo -e "${YELLOW}🔍 New Analytics API Errors: $NEW_ANALYTICS_ERRORS${NC}"

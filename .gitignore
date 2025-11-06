@@ -79,3 +79,4 @@ logs/
 Thumbs.db
 services/inventory-service/.venv
 services/order-service/bin
+.history

@@ -132,10 +132,11 @@ export class AvroKafkaConsumerService {
     } catch (error: any) {
       // Check if this might be a regular JSON or Java serialized message
       if (error.message && error.message.includes('Magic byte')) {
-        this.trackError('Not an Avro message, skipping');
+        // Silently skip non-Avro messages - don't count as error
+        console.debug('Received non-Avro message, skipping');
         return;
       }
-      
+
       this.trackError(`Error processing Avro message: ${error.message}`);
       console.error('Error processing Avro message:', error);
       throw error;

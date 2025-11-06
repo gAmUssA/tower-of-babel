@@ -87,7 +87,13 @@ export class KafkaConsumerService {
       this.trackError('Received empty message');
       return;
     }
-    
+
+    // Check if this is an Avro message (magic byte 0x00)
+    if (message.value[0] === 0) {
+      console.debug('Received Avro message, skipping in JSON consumer');
+      return;
+    }
+
     try {
       // First try to parse as JSON
       const messageStr = message.value.toString();

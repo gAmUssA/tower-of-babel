@@ -106,7 +106,8 @@ fi
 
 # Check for errors in Analytics API
 ANALYTICS_ERRORS=$(curl -s http://localhost:9300/api/errors)
-ANALYTICS_ERROR_COUNT=$(echo $ANALYTICS_ERRORS | grep -o '"errorCount":[0-9]*' | cut -d':' -f2)
+ANALYTICS_ERROR_COUNT=$(echo $ANALYTICS_ERRORS | grep -o '"errorCount":[0-9]*' | head -1 | cut -d':' -f2)
+ANALYTICS_ERROR_COUNT=${ANALYTICS_ERROR_COUNT:-0}
 
 echo -e "${YELLOW}🔍 Analytics API Errors: $ANALYTICS_ERROR_COUNT${NC}"
 

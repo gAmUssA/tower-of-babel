@@ -78,6 +78,12 @@ STEP2_INVENTORY_PROCESSING_SUCCESS=false
 STEP3_ANALYTICS_PROCESSING_SUCCESS=false
 STEP4_NO_NEW_ERRORS=true # Assume no new errors initially
 
+# Get initial error counts BEFORE sending the order
+INVENTORY_ERRORS=$(curl -s http://localhost:9000/errors | grep -o '"error_count":[0-9]*' | head -1 | cut -d':' -f2)
+INVENTORY_ERRORS=${INVENTORY_ERRORS:-0}
+ANALYTICS_ERRORS=$(curl -s http://localhost:9300/api/errors | grep -o '"errorCount":[0-9]*' | head -1 | cut -d':' -f2)
+ANALYTICS_ERRORS=${ANALYTICS_ERRORS:-0}
+
 # Create an order using Avro serialization
 echo -e "${PURPLE}${WRENCH} Step 1: Creating an order using Avro serialization...${NC}"
 ORDER_RESPONSE=$(curl -s -X POST http://localhost:9080/orders/avro -H "Content-Type: application/json" -d '{
@@ -107,10 +113,6 @@ fi
 # Wait for processing
 echo -e "\n${YELLOW}Waiting for message propagation (12 seconds)...${NC}" # Increased wait time
 sleep 12
-
-# Get initial error counts
-INVENTORY_ERRORS=$(curl -s http://localhost:9000/errors | grep -o '"error_count":[0-9]*' | head -1 | cut -d':' -f2)
-ANALYTICS_ERRORS=$(curl -s http://localhost:9300/api/errors | grep -o '"errorCount":[0-9]*' | head -1 | cut -d':' -f2)
 
 # Check if the order was processed by the Inventory Service
 echo -e "\n${PURPLE}${MAGNIFYING} Step 2: Checking if the order was processed by the Inventory Service...${NC}"
@@ -155,7 +157,9 @@ fi
 
 # Check for any new errors
 NEW_INVENTORY_ERRORS=$(curl -s http://localhost:9000/errors | grep -o '"error_count":[0-9]*' | head -1 | cut -d':' -f2)
+NEW_INVENTORY_ERRORS=${NEW_INVENTORY_ERRORS:-0}
 NEW_ANALYTICS_ERRORS=$(curl -s http://localhost:9300/api/errors | grep -o '"errorCount":[0-9]*' | head -1 | cut -d':' -f2)
+NEW_ANALYTICS_ERRORS=${NEW_ANALYTICS_ERRORS:-0}
 
 INVENTORY_ERROR_DIFF=$((NEW_INVENTORY_ERRORS - INVENTORY_ERRORS))
 ANALYTICS_ERROR_DIFF=$((NEW_ANALYTICS_ERRORS - ANALYTICS_ERRORS))
