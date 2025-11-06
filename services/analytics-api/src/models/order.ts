@@ -7,8 +7,8 @@ export interface Order {
   // Intentional type inconsistency: orderId is UUID in Java but string here
   orderId: string;
   
-  // Intentional type inconsistency: userId is string in Java but number here
-  userId: number;
+  // Type now matches Avro schema: userId is string in both Java and TypeScript
+  userId: string;
   
   // Intentional type inconsistency: amount is BigDecimal in Java but string here
   amount: string;

@@ -99,11 +99,11 @@ export class KafkaConsumerService {
       const messageStr = message.value.toString();
       const data = JSON.parse(messageStr);
       
-      // Intentional type conversions that will cause issues
+      // Preserve types to match source data and Avro schema
       const order: Order = {
         orderId: data.orderId || '',
-        // Type inconsistency: Convert string to number
-        userId: parseInt(data.userId || '0'),
+        // Preserve userId as string to match Avro schema and source data type
+        userId: data.userId || '',
         // Type inconsistency: Convert BigDecimal to string
         amount: data.amount ? data.amount.toString() : '0',
         status: data.status || 'UNKNOWN',

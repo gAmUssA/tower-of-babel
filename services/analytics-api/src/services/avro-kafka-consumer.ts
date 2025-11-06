@@ -117,7 +117,7 @@ export class AvroKafkaConsumerService {
       
       const order: Order = {
         orderId: decodedMessage.orderId || '',
-        userId: parseInt(decodedMessage.userId?.toString() || '0'),
+        userId: decodedMessage.userId?.toString() || '',
         amount: decodedMessage.amount?.toString() || '0',
         status: decodedMessage.status || 'UNKNOWN',
         items: [],
