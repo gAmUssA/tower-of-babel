@@ -63,8 +63,12 @@ tasks.register<Copy>("copySchemas") {
     include("*.avsc")
 }
 
-// Make the generateAvroJava task depend on copySchemas
+// Make all Avro generation tasks depend on copySchemas
 tasks.named("generateAvroJava") {
+    dependsOn("copySchemas")
+}
+
+tasks.named("generateAvroProtocol") {
     dependsOn("copySchemas")
 }
 
