@@ -17,6 +17,24 @@ TESTS_PASSED=0
 TESTS_FAILED=0
 SUBJECT="orders-value"
 
+# Verify compatibility mode is set to FULL
+echo -e "${CYAN}Checking compatibility mode...${NC}"
+COMPAT_CONFIG=$(curl -s http://localhost:8081/config)
+COMPAT_LEVEL=$(echo "$COMPAT_CONFIG" | jq -r '.compatibilityLevel')
+echo -e "${YELLOW}Current compatibility level: $COMPAT_LEVEL${NC}"
+
+if [ "$COMPAT_LEVEL" != "FULL" ]; then
+    echo -e "${YELLOW}⚠️  Warning: Compatibility mode is not FULL${NC}"
+    echo -e "${YELLOW}   Setting to FULL for comprehensive testing...${NC}"
+    curl -s -X PUT \
+        -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+        --data '{"compatibility":"FULL"}' \
+        http://localhost:8081/config > /dev/null
+    echo -e "${GREEN}✅ Compatibility mode set to FULL${NC}\n"
+else
+    echo -e "${GREEN}✅ Compatibility mode is FULL${NC}\n"
+fi
+
 # Test 1: Removing required field should be rejected
 echo -e "${CYAN}Test 1: Removing required field is rejected${NC}"
 
@@ -43,10 +61,12 @@ COMPAT_RESPONSE=$(curl -s -X POST \
 IS_COMPATIBLE=$(echo "$COMPAT_RESPONSE" | jq -r '.is_compatible')
 
 if [ "$IS_COMPATIBLE" = "false" ]; then
-    echo -e "${GREEN}✅ PASSED - Breaking change blocked${NC}\n"
+    echo -e "${GREEN}✅ PASSED - Breaking change blocked${NC}"
+    echo -e "${CYAN}Reason: $(echo "$COMPAT_RESPONSE" | jq -r '.messages[]? // "Removing required field breaks compatibility"')${NC}\n"
     TESTS_PASSED=$((TESTS_PASSED + 1))
 else
-    echo -e "${RED}❌ FAILED - Breaking change not detected${NC}\n"
+    echo -e "${RED}❌ FAILED - Breaking change not detected${NC}"
+    echo -e "${YELLOW}Response: $(echo "$COMPAT_RESPONSE" | jq -c .)${NC}\n"
     TESTS_FAILED=$((TESTS_FAILED + 1))
 fi
 

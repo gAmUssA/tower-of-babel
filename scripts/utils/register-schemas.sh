@@ -15,6 +15,20 @@ if ! curl -s http://localhost:8081/subjects > /dev/null; then
     exit 1
 fi
 
+# Set global compatibility mode to FULL for comprehensive protection
+echo -e "${YELLOW}🔧 Setting compatibility mode to FULL...${NC}"
+COMPAT_RESPONSE=$(curl -s -X PUT \
+    -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+    --data '{"compatibility":"FULL"}' \
+    http://localhost:8081/config)
+
+if echo "$COMPAT_RESPONSE" | jq -e '.compatibility' > /dev/null 2>&1; then
+    echo -e "${GREEN}✅ Compatibility mode set to FULL${NC}"
+    echo -e "${YELLOW}   This ensures both backward and forward compatibility${NC}"
+else
+    echo -e "${YELLOW}⚠️  Could not set compatibility mode (may already be set)${NC}"
+fi
+
 # Function to register a schema
 register_schema() {
     local schema_file=$1

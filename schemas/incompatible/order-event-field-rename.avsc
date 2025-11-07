@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "OrderEvent",
+  "namespace": "com.company.orders",
+  "doc": "INCOMPATIBLE: Renamed 'orderId' to 'id' - breaks backward compatibility (field removal + addition)",
+  "fields": [
+    {"name": "id", "type": "string", "doc": "Unique order identifier (RENAMED from orderId)"},
+    {"name": "userId", "type": "string", "doc": "Customer identifier"},
+    {"name": "amount", "type": "double", "doc": "Order total amount"},
+    {"name": "status", "type": "string", "doc": "Order status"}
+  ]
+}

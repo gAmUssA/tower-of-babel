@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "OrderEvent",
+  "namespace": "com.company.orders",
+  "doc": "INCOMPATIBLE: Changed 'amount' type from double to string - breaks backward compatibility",
+  "fields": [
+    {"name": "orderId", "type": "string", "doc": "Unique order identifier"},
+    {"name": "userId", "type": "string", "doc": "Customer identifier"},
+    {"name": "amount", "type": "string", "doc": "Order total amount (CHANGED TYPE)"},
+    {"name": "status", "type": "string", "doc": "Order status"}
+  ]
+}
