@@ -9,7 +9,7 @@
       "installGradle": "true"
     },
     "ghcr.io/devcontainers/features/python:1": {
-      "version": "3.13",
+      "version": "3.14",
       "installTools": true
     },
     "ghcr.io/devcontainers/features/node:1": {
