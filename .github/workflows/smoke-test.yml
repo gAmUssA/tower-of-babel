@@ -24,16 +24,16 @@ jobs:
       
       # Setup Python for Inventory Service
       - name: Set up Python 3.9
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.14'
           cache: 'pip'
       
       # Setup Node.js for Analytics API
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: '22'
+          node-version: '24'
           cache: 'npm'
           cache-dependency-path: services/analytics-api/package-lock.json
       
