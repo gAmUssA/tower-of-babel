@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Service Dashboard - Tower of Babel Demo</title>
+    <link rel="stylesheet" href="/static/dashboard.css">
+</head>
+<body>
+    <!-- Header Section -->
+    <header>
+        <div class="container">
+            <h1>Inventory Service Dashboard</h1>
+            <p class="subtitle">Tower of Babel Demo - Real-time Kafka Message Monitoring</p>
+            <p class="last-update">Last updated: <span id="last-update-time">--:--:--</span></p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Connection Error Banner -->
+        <div id="connection-error" class="error-banner" style="display: none;">
+            <strong>Connection Error:</strong> Unable to reach the Inventory Service API. Retrying...
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading-spinner" class="loading-spinner">
+            <p>Loading dashboard...</p>
+        </div>
+
+        <!-- Health Status Section -->
+        <section id="health-section" class="health-section" style="display: none;">
+            <h2>Consumer Status</h2>
+            <div class="health-cards">
+                <div class="health-card">
+                    <h3>JSON Consumer</h3>
+                    <div class="status-indicator">
+                        <span id="json-status-badge" class="status-badge">Checking...</span>
+                    </div>
+                    <p class="error-count">Errors: <span id="json-error-count">0</span></p>
+                </div>
+                <div class="health-card">
+                    <h3>Avro Consumer</h3>
+                    <div class="status-indicator">
+                        <span id="avro-status-badge" class="status-badge">Checking...</span>
+                    </div>
+                    <p class="error-count">Errors: <span id="avro-error-count">0</span></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Filter Controls Section -->
+        <section id="filter-section" class="filter-section" style="display: none;">
+            <div class="filter-controls">
+                <div class="filter-buttons">
+                    <button id="filter-all" class="filter-btn active" data-filter="all">All</button>
+                    <button id="filter-json" class="filter-btn" data-filter="json">JSON</button>
+                    <button id="filter-avro" class="filter-btn" data-filter="avro">Avro</button>
+                </div>
+                <div class="item-count">
+                    Total Items: <span id="item-count">0</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Inventory Table Section -->
+        <section id="inventory-section" class="inventory-section" style="display: none;">
+            <h2>Inventory Items</h2>
+            <div class="table-container">
+                <table id="inventory-table">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Product ID</th>
+                            <th>Quantity</th>
+                            <th>User ID</th>
+                            <th>Status</th>
+                            <th>Source</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventory-tbody">
+                        <!-- Table rows will be inserted here by JavaScript -->
+                    </tbody>
+                </table>
+                <div id="empty-state" class="empty-state" style="display: none;">
+                    <p>No inventory items found. Waiting for Kafka messages...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Errors Section -->
+        <section id="errors-section" class="errors-section" style="display: none;">
+            <div class="errors-header">
+                <h2>Errors (<span id="total-error-count">0</span>)</h2>
+                <button id="toggle-errors" class="toggle-btn">▼ Expand</button>
+            </div>
+            <div id="errors-content" class="errors-content" style="display: none;">
+                <div class="error-group">
+                    <h3>JSON Consumer Errors</h3>
+                    <ul id="json-errors-list" class="error-list">
+                        <li class="no-errors">No errors</li>
+                    </ul>
+                </div>
+                <div class="error-group">
+                    <h3>Avro Consumer Errors</h3>
+                    <ul id="avro-errors-list" class="error-list">
+                        <li class="no-errors">No errors</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Tower of Babel - Learn Schema Registry</p>
+        </div>
+    </footer>
+
+    <script src="/static/dashboard.js"></script>
+</body>
+</html>

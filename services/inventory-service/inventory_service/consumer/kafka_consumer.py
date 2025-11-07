@@ -32,6 +32,8 @@ class OrderKafkaConsumer:
         self.running = False
         self.consumer_thread = None
         self.error_count = 0
+        self.last_errors = []
+        self.max_errors_to_track = 10
         
     def start(self):
         """Start the Kafka consumer in a separate thread"""
@@ -89,6 +91,11 @@ class OrderKafkaConsumer:
                     self._process_message(msg.value())
                 except Exception as e:
                     self.error_count += 1
+                    error_msg = str(e)
+                    self.last_errors.append(error_msg)
+                    # Keep only the last N errors
+                    if len(self.last_errors) > self.max_errors_to_track:
+                        self.last_errors.pop(0)
                     logger.error(f"Error processing message: {e}")
                     
         except KafkaException as e:
@@ -171,3 +178,7 @@ class OrderKafkaConsumer:
     def get_error_count(self) -> int:
         """Get the number of errors encountered"""
         return self.error_count
+    
+    def get_last_errors(self) -> list:
+        """Get the list of last error messages"""
+        return self.last_errors.copy()

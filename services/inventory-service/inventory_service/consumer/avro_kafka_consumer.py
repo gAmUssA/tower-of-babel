@@ -39,6 +39,8 @@ class AvroOrderKafkaConsumer:
         self.running = False
         self.consumer_thread = None
         self.error_count = 0
+        self.last_errors = []
+        self.max_errors_to_track = 10
         self.schema_cache = {}
         
     def start(self):
@@ -97,6 +99,11 @@ class AvroOrderKafkaConsumer:
                     self._process_message(msg.value())
                 except Exception as e:
                     self.error_count += 1
+                    error_msg = str(e)
+                    self.last_errors.append(error_msg)
+                    # Keep only the last N errors
+                    if len(self.last_errors) > self.max_errors_to_track:
+                        self.last_errors.pop(0)
                     logger.error(f"Error processing message: {e}")
                     
         except KafkaException as e:
@@ -144,11 +151,13 @@ class AvroOrderKafkaConsumer:
             if not order_id:
                 raise ValueError("Missing orderId field in Avro message")
                 
-            # For the demo, just store the order information
+            # For the demo, store the order information with consistent field names
+            # Note: Avro schema doesn't have product_id or quantity, so we use placeholders
             inventory_entry = {
                 "order_id": order_id,
                 "user_id": user_id,
-                "amount": amount,
+                "product_id": f"avro-order-{order_id[:8]}",  # Generate a placeholder product_id
+                "quantity": int(amount) if amount else 1,  # Convert amount to quantity (simplified)
                 "status": status if status else "PROCESSED",
                 "source": "avro"
             }
@@ -197,3 +206,7 @@ class AvroOrderKafkaConsumer:
     def get_error_count(self) -> int:
         """Get the number of errors encountered"""
         return self.error_count
+    
+    def get_last_errors(self) -> list:
+        """Get the list of last error messages"""
+        return self.last_errors.copy()

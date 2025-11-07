@@ -13,6 +13,8 @@ from typing import Dict, List
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from inventory_service.consumer import OrderKafkaConsumer
@@ -40,10 +42,6 @@ inventory_store: Dict[str, Dict] = {}
 # Kafka consumer instances
 kafka_consumer = None
 avro_kafka_consumer = None
-
-# Error tracking
-last_errors: List[str] = []
-max_errors_to_track = 10
 
 
 @asynccontextmanager
@@ -109,6 +107,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Mount static files for dashboard assets
+static_path = os.path.join(os.path.dirname(__file__), "..", "src", "public")
+if os.path.exists(static_path):
+    app.mount("/static", StaticFiles(directory=static_path), name="static")
+
 
 class InventoryStatus(BaseModel):
     """Inventory status response model"""
@@ -171,13 +174,21 @@ async def get_error_stats():
     return {
         "json_consumer": {
             "error_count": kafka_consumer.get_error_count() if kafka_consumer else 0,
-            "last_errors": last_errors
+            "last_errors": kafka_consumer.get_last_errors() if kafka_consumer else []
         },
         "avro_consumer": {
             "error_count": avro_kafka_consumer.get_error_count() if avro_kafka_consumer else 0,
-            "last_errors": []
+            "last_errors": avro_kafka_consumer.get_last_errors() if avro_kafka_consumer else []
         }
     }
+
+@app.get("/dashboard")
+async def serve_dashboard():
+    """Serve the inventory dashboard frontend"""
+    dashboard_path = os.path.join(os.path.dirname(__file__), "..", "src", "public", "dashboard.html")
+    if not os.path.exists(dashboard_path):
+        raise HTTPException(status_code=404, detail="Dashboard not found")
+    return FileResponse(dashboard_path)
 
 # Run the application with uvicorn when this script is executed directly
 if __name__ == "__main__":
