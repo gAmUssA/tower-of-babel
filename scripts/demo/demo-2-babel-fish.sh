@@ -59,8 +59,8 @@ echo -e "${YELLOW}ℹ️ Initial error counts - Inventory: $INITIAL_INVENTORY_ER
 # Send the order and wait for processing
 echo -e "${BLUE}🚀 Sending order with Avro serialization...${NC}"
 
-# Create an order using the correct endpoint (Avro serialization)
-ORDER_RESPONSE=$(curl -s -X POST http://localhost:9080/orders \
+# Create an order using the Avro endpoint
+ORDER_RESPONSE=$(curl -s -X POST http://localhost:9080/orders/avro \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "user123",
