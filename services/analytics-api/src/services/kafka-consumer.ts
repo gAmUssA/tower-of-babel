@@ -1,6 +1,11 @@
-import { Kafka, Consumer, KafkaMessage } from 'kafkajs';
+import { KafkaJS } from '@confluentinc/kafka-javascript';
 import { EventEmitter } from 'events';
 import { Order } from '../models/order';
+
+// Use KafkaJS compatibility layer from Confluent
+const { Kafka } = KafkaJS;
+type Consumer = KafkaJS.Consumer;
+type KafkaMessage = KafkaJS.KafkaMessage;
 
 /**
  * Kafka consumer service with intentional type inconsistency issues
@@ -20,11 +25,13 @@ export class KafkaConsumerService {
     private readonly groupId: string
   ) {
     const kafka = new Kafka({
-      clientId: 'analytics-api',
-      brokers: this.brokers
+      kafkaJS: {
+        clientId: 'analytics-api',
+        brokers: this.brokers
+      }
     });
     
-    this.consumer = kafka.consumer({ groupId: this.groupId });
+    this.consumer = kafka.consumer({ 'group.id': this.groupId });
     this.eventEmitter = new EventEmitter();
   }
   
@@ -39,7 +46,7 @@ export class KafkaConsumerService {
     
     try {
       await this.consumer.connect();
-      await this.consumer.subscribe({ topic: this.topic, fromBeginning: true });
+      await this.consumer.subscribe({ topics: [this.topic] });
       
       await this.consumer.run({
         eachMessage: async ({ topic, partition, message }) => {

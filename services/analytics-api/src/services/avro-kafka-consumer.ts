@@ -1,7 +1,12 @@
-import { Kafka, Consumer, KafkaMessage } from 'kafkajs';
-import { SchemaRegistry } from '@kafkajs/confluent-schema-registry';
+import { KafkaJS } from '@confluentinc/kafka-javascript';
+import { SchemaRegistryClient, AvroDeserializer, SerdeType } from '@confluentinc/schemaregistry';
 import { EventEmitter } from 'events';
 import { Order } from '../models/order';
+
+// Use KafkaJS compatibility layer from Confluent
+const { Kafka } = KafkaJS;
+type Consumer = KafkaJS.Consumer;
+type KafkaMessage = KafkaJS.KafkaMessage;
 
 /**
  * Avro Kafka consumer service with Schema Registry integration
@@ -9,7 +14,8 @@ import { Order } from '../models/order';
  */
 export class AvroKafkaConsumerService {
   private consumer: Consumer;
-  private schemaRegistry: SchemaRegistry;
+  private schemaRegistry: SchemaRegistryClient;
+  private deserializer: AvroDeserializer;
   private eventEmitter: EventEmitter;
   private running: boolean = false;
   private errorCount: number = 0;
@@ -23,12 +29,23 @@ export class AvroKafkaConsumerService {
     private readonly schemaRegistryUrl: string
   ) {
     const kafka = new Kafka({
-      clientId: 'analytics-api-avro',
-      brokers: this.brokers
+      kafkaJS: {
+        clientId: 'analytics-api-avro',
+        brokers: this.brokers
+      }
     });
     
-    this.schemaRegistry = new SchemaRegistry({ host: this.schemaRegistryUrl });
-    this.consumer = kafka.consumer({ groupId: this.groupId });
+    this.schemaRegistry = new SchemaRegistryClient({ 
+      baseURLs: [this.schemaRegistryUrl] 
+    });
+    
+    this.deserializer = new AvroDeserializer(
+      this.schemaRegistry,
+      SerdeType.VALUE,
+      {}
+    );
+    
+    this.consumer = kafka.consumer({ 'group.id': this.groupId });
     this.eventEmitter = new EventEmitter();
   }
   
@@ -43,10 +60,10 @@ export class AvroKafkaConsumerService {
     
     try {
       await this.consumer.connect();
-      await this.consumer.subscribe({ topic: this.topic, fromBeginning: true });
+      await this.consumer.subscribe({ topics: [this.topic] });
       
       await this.consumer.run({
-        eachMessage: async ({ topic, partition, message }) => {
+        eachMessage: async ({ topic, partition, message }: { topic: string; partition: number; message: KafkaMessage }) => {
           try {
             await this.processMessage(message);
           } catch (error: any) {
@@ -93,7 +110,10 @@ export class AvroKafkaConsumerService {
     
     try {
       // Decode Avro message using Schema Registry
-      const decodedMessage = await this.schemaRegistry.decode(message.value);
+      const decodedMessage = await this.deserializer.deserialize(
+        this.topic,
+        message.value
+      );
       
       // Convert Avro object to our Order model
       // Get timestamp from message if available

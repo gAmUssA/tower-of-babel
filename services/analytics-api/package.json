@@ -21,11 +21,11 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@kafkajs/confluent-schema-registry": "^3.3.0",
+    "@confluentinc/kafka-javascript": "^1.6.0",
+    "@confluentinc/schemaregistry": "^1.6.0",
     "avro-typescript": "^1.0.4",
     "dotenv": "^16.3.1",
     "express": "^5.1.0",
-    "kafkajs": "^2.2.4",
     "socket.io": "^4.7.2"
   },
   "devDependencies": {
