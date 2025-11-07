@@ -73,9 +73,8 @@ if [ ! -f "schemas/v2/order-event.avsc" ]; then
 fi
 
 echo -e "${CYAN}Proposed v2 schema changes:${NC}"
-echo -e "${YELLOW}  + Adding optional field: 'customerEmail'${NC}"
-echo -e "${YELLOW}  + Adding optional field: 'shippingAddress'${NC}"
-echo -e "${YELLOW}  + Adding optional field: 'metadata'${NC}\n"
+echo -e "${YELLOW}  + Adding optional field: 'orderTimestamp' (long, nullable)${NC}"
+echo -e "${YELLOW}  + Adding optional field: 'metadata' (map of strings, nullable)${NC}\n"
 
 SCHEMA_V2_JSON=$(cat schemas/v2/order-event.avsc | jq -c tostring)
 COMPAT_RESPONSE=$(curl -s -X POST \
@@ -121,42 +120,51 @@ echo ""
 
 # Step 4: Demonstrate backward compatibility
 echo -e "${BLUE}📋 Step 4: Testing backward compatibility...${NC}"
-echo -e "${YELLOW}Old consumers (v1) should be able to read new messages (v2)${NC}\n"
+echo -e "${YELLOW}Scenario: Producer sends v1 messages, but v2 schema is registered${NC}"
+echo -e "${YELLOW}Result: Consumers using v2 schema can read v1 messages (new fields get default null values)${NC}\n"
 
 if [ -f "scripts/utils/wait-for-services.sh" ]; then
     # Check if services are running
     if curl -s http://localhost:9080/actuator/health | grep -q "UP"; then
-        echo -e "${CYAN}Creating order with v2 schema (includes new optional fields)...${NC}"
+        echo -e "${CYAN}Creating order using v1 schema (producer hasn't upgraded yet)...${NC}"
         
         ORDER_RESPONSE=$(curl -s -X POST http://localhost:9080/orders/avro \
           -H "Content-Type: application/json" \
           -d '{
-            "userId": "user-v2-'$(date +%s)'",
+            "userId": "user-compat-test-'$(date +%s)'",
             "amount": 199.99,
-            "items": [{"productId": "product-v2", "quantity": 1, "price": 199.99}],
-            "customerEmail": "customer@example.com",
-            "shippingAddress": "123 Main St, City, State 12345"
+            "items": [{"productId": "product-v2", "quantity": 1, "price": 199.99}]
           }')
         
         ORDER_ID=$(echo $ORDER_RESPONSE | grep -o '"orderId":"[^"]*"' | cut -d'"' -f4)
         
         if [ -n "$ORDER_ID" ]; then
-            echo -e "${GREEN}✅ Order created with v2 schema: $ORDER_ID${NC}"
+            echo -e "${GREEN}✅ Order created: $ORDER_ID${NC}"
             echo -e "${YELLOW}⏳ Waiting for message processing (5 seconds)...${NC}"
             sleep 5
             
-            # Check if old consumers can still process it
+            # Check if consumers can still process it
             if curl -s http://localhost:9000/health | grep -q "healthy"; then
                 INVENTORY_RESULT=$(curl -s "http://localhost:9000/inventory?source=avro")
                 if echo "$INVENTORY_RESULT" | grep -q "$ORDER_ID"; then
-                    echo -e "${GREEN}✅ Old consumer (Inventory Service) successfully processed v2 message${NC}"
+                    echo -e "${GREEN}✅ Consumer (Inventory Service) successfully processed the message${NC}"
                     echo -e "${CYAN}💡 Backward compatibility verified!${NC}"
+                    echo -e "${CYAN}   • Producer uses v1 schema (4 fields)${NC}"
+                    echo -e "${CYAN}   • v2 schema registered (6 fields with defaults)${NC}"
+                    echo -e "${CYAN}   • Consumer can read v1 messages (new fields = null)${NC}"
                 else
                     echo -e "${YELLOW}⚠️  Order not found in Inventory Service yet${NC}"
                 fi
             fi
+            
+            if curl -s http://localhost:9300/health | grep -q "healthy"; then
+                ANALYTICS_RESULT=$(curl -s "http://localhost:9300/api/messages/avro")
+                if echo "$ANALYTICS_RESULT" | grep -q "$ORDER_ID"; then
+                    echo -e "${GREEN}✅ Analytics API also processed the message${NC}"
+                fi
+            fi
         else
-            echo -e "${YELLOW}⚠️  Could not create order (service may not support v2 yet)${NC}"
+            echo -e "${YELLOW}⚠️  Could not create order${NC}"
         fi
     else
         echo -e "${YELLOW}⚠️  Order Service not running - skipping live test${NC}"
@@ -172,17 +180,24 @@ echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━�
 echo -e "${BLUE}📊 Demo 3 Summary: Safe Evolution${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${GREEN}✅ Schema evolution demonstrated:${NC}"
-echo -e "  ${GREEN}✓${NC} Added optional fields to schema"
-echo -e "  ${GREEN}✓${NC} Compatibility check passed"
-echo -e "  ${GREEN}✓${NC} New schema registered successfully"
-echo -e "  ${GREEN}✓${NC} Backward compatibility verified"
+echo -e "  ${GREEN}✓${NC} Added optional fields: orderTimestamp, metadata"
+echo -e "  ${GREEN}✓${NC} Compatibility check passed (BACKWARD compatible)"
+echo -e "  ${GREEN}✓${NC} New schema v2 registered successfully"
+echo -e "  ${GREEN}✓${NC} Backward compatibility verified in practice"
+echo -e ""
+echo -e "${CYAN}What happened:${NC}"
+echo -e "  ${BLUE}1.${NC} v1 schema has 4 fields: orderId, userId, amount, status"
+echo -e "  ${BLUE}2.${NC} v2 schema adds 2 optional fields with null defaults"
+echo -e "  ${BLUE}3.${NC} Producer still sends v1 messages (hasn't upgraded)"
+echo -e "  ${BLUE}4.${NC} Consumers can use v2 schema and read v1 messages"
+echo -e "  ${BLUE}5.${NC} New fields get default null values automatically"
 echo -e ""
 echo -e "${CYAN}Key benefits:${NC}"
-echo -e "  ${BLUE}•${NC} Old consumers can read new messages (ignore new fields)"
-echo -e "  ${BLUE}•${NC} New consumers can read old messages (use default values)"
+echo -e "  ${BLUE}•${NC} Gradual rollout: upgrade consumers first, producers later"
 echo -e "  ${BLUE}•${NC} No service downtime required"
-echo -e "  ${BLUE}•${NC} Gradual rollout of changes"
+echo -e "  ${BLUE}•${NC} No coordination needed between teams"
+echo -e "  ${BLUE}•${NC} Schema Registry enforces compatibility rules"
 echo -e ""
-echo -e "${CYAN}Next: Run ${BLUE}./scripts/demo/demo-4-breaking-change-blocked.sh${CYAN} to see${NC}"
-echo -e "${CYAN}how Schema Registry prevents incompatible changes${NC}"
+echo -e "${CYAN}Next: Run ${BLUE}make demo-4${CYAN} to see how Schema Registry${NC}"
+echo -e "${CYAN}prevents incompatible breaking changes${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
