@@ -11,7 +11,19 @@ RED = \033[0;31m
 BLUE = \033[0;34m
 NC = \033[0m # No Color
 
-.PHONY: help setup setup-cloud clean status demo-reset generate build install-deps install-python-deps install-node-deps run-order-service run-inventory-service run-analytics-api phase3-demo phase3-java-serialization phase3-json-mismatch phase3-type-inconsistency phase3-normal-flow phase4-demo phase4-test inventory-service-smoke-test
+.PHONY: help demo-workflow setup setup-cloud clean status demo-reset generate build install-deps install-python-deps install-node-deps run-order-service run-inventory-service run-analytics-api \
+	demo-1 demo-1-tower-of-babel demo-1-java demo-1-json demo-1-type \
+	demo-2 demo-2-babel-fish demo-2-comprehensive \
+	demo-3 demo-3-safe-evolution \
+	demo-4 demo-4-breaking-change-blocked \
+	demo-all demo-broken demo-fixed demo-evolution \
+	test-1 test-1-serialization-failures \
+	test-2 test-2-avro-integration \
+	test-3 test-3-schema-evolution \
+	test-4 test-4-compatibility-checks \
+	test-all \
+	phase3-demo phase3-java-serialization phase3-json-mismatch phase3-type-inconsistency phase3-normal-flow phase4-demo phase4-test \
+	inventory-service-smoke-test analytics-api-smoke-test
 
 help: ## 📋 Show this help message
 	@echo -e "$(BLUE)🚀 Kafka Schema Registry Demo$(NC)"
@@ -22,7 +34,7 @@ setup: ## 🏗️  Setup local environment with Docker
 	@echo -e "$(GREEN)🏗️  Setting up local Kafka environment...$(NC)"
 	docker-compose up -d
 	@echo -e "$(GREEN)⏳ Waiting for services to be ready...$(NC)"
-	./scripts/wait-for-services.sh
+	./scripts/utils/wait-for-services.sh
 	@echo -e "$(GREEN)✅ Environment ready!$(NC)"
 
 setup-cloud: ## ☁️  Setup for Confluent Cloud
@@ -51,8 +63,8 @@ clean: ## 🧹 Clean up everything
 
 demo-reset: ## 🔄 Reset demo environment
 	@echo -e "$(YELLOW)🔄 Resetting demo state...$(NC)"
-	./scripts/cleanup-topics.sh
-	./scripts/cleanup-schemas.sh
+	./scripts/utils/cleanup-topics.sh
+	./scripts/utils/cleanup-schemas.sh
 	docker-compose restart
 	@echo -e "$(GREEN)✨ Demo reset complete!$(NC)"
 
@@ -148,22 +160,22 @@ run-analytics-api: install-node-deps ## 🚀 Run Node.js Analytics API
 	@echo -e "$(GREEN)🚀 Starting Analytics API...$(NC)"
 	cd services/analytics-api && npm start
 
-phase3-demo: ## 🎭 Run Phase 3 Demo (all scenarios)
-	@echo -e "$(GREEN)🎭 Running Phase 3 Demo - Serialization Scenarios...$(NC)"
+phase3-demo: ## 🎭 [DEPRECATED] Run Phase 3 Demo - Use demo-1 instead
+	@echo -e "$(YELLOW)⚠️  This target is deprecated. Use 'make demo-1' instead.$(NC)"
+	@echo -e "$(GREEN)🎭 Running Demo 1: Tower of Babel...$(NC)"
 	@echo -e "$(BLUE)This demo shows different serialization scenarios:$(NC)"
-	@echo -e "$(BLUE)1. Normal flow (everything works)$(NC)"
-	@echo -e "$(BLUE)2. Java serialization failures$(NC)"
-	@echo -e "$(BLUE)3. JSON field name mismatch failures$(NC)"
-	@echo -e "$(BLUE)4. Type inconsistency failures$(NC)"
+	@echo -e "$(BLUE)1. Java serialization failures$(NC)"
+	@echo -e "$(BLUE)2. JSON field name mismatch failures$(NC)"
+	@echo -e "$(BLUE)3. Type inconsistency failures$(NC)"
 	@echo -e "$(BLUE)Make sure all services are running:$(NC)"
 	@echo -e "$(BLUE)- make run-order-service (in one terminal)$(NC)"
 	@echo -e "$(BLUE)- make run-inventory-service (in another terminal)$(NC)"
 	@echo -e "$(BLUE)- make run-analytics-api (in a third terminal)$(NC)"
-	@echo -e "$(BLUE)Then run each demo scenario:$(NC)"
-	@echo -e "$(BLUE)- make phase3-normal-flow$(NC)"
-	@echo -e "$(BLUE)- make phase3-java-serialization$(NC)"
-	@echo -e "$(BLUE)- make phase3-json-mismatch$(NC)"
-	@echo -e "$(BLUE)- make phase3-type-inconsistency$(NC)"
+	@echo -e "$(BLUE)New commands:$(NC)"
+	@echo -e "$(BLUE)- make demo-1          # Run all chaos scenarios$(NC)"
+	@echo -e "$(BLUE)- make demo-1-java     # Java serialization only$(NC)"
+	@echo -e "$(BLUE)- make demo-1-json     # JSON mismatch only$(NC)"
+	@echo -e "$(BLUE)- make demo-1-type     # Type inconsistency only$(NC)"
 
 demo-broken: ## 💥 Start failure scenarios demo
 	@echo -e "$(GREEN)💥 Starting failure scenarios demo...$(NC)"
@@ -184,41 +196,131 @@ demo-fixed: ## ✨ Switch to Avro serialization
 demo-evolution: ## 🧬 Demonstrate schema evolution
 	@echo -e "$(GREEN)🧬 Starting schema evolution demo...$(NC)"
 	@echo -e "$(BLUE)This will show backward/forward compatibility with schema changes$(NC)"
-	./scripts/evolve-schema.sh
+	./scripts/utils/evolve-schema.sh
 	@echo -e "$(GREEN)🎉 Schema evolution demo complete!$(NC)"
 
-phase3-java-serialization: ## 🎭 Demo Java serialization failures
-	@echo -e "$(GREEN)🎭 Running Java Serialization Failure Demo...$(NC)"
-	chmod +x scripts/demo/trigger-java-serialization-failure.sh
-	./scripts/demo/trigger-java-serialization-failure.sh
+# ============================================================================
+# Demo Scripts - New Naming Convention
+# ============================================================================
 
+demo-1: demo-1-tower-of-babel ## 🗼 Run Demo 1: Tower of Babel (all chaos scenarios)
 
-phase3-json-mismatch: ## 🎭 Demo JSON field name mismatch failures
-	@echo -e "$(GREEN)🎭 Running JSON Field Name Mismatch Demo...$(NC)"
-	chmod +x scripts/demo/trigger-json-mismatch-failure.sh
-	./scripts/demo/trigger-json-mismatch-failure.sh
+demo-1-tower-of-babel: ## 🗼 Demo 1: Tower of Babel - Serialization Chaos
+	@echo -e "$(GREEN)🗼 Running Demo 1: Tower of Babel - Serialization Chaos...$(NC)"
+	./scripts/demo/demo-1-tower-of-babel.sh
 
+demo-1-java: ## 🗼 Demo 1a: Java serialization failure only
+	@echo -e "$(GREEN)🗼 Running Demo 1a: Java Serialization Failure...$(NC)"
+	./scripts/demo/demo-1-tower-of-babel.sh java
 
-phase3-type-inconsistency: ## 🎭 Demo type inconsistency failures
-	@echo -e "$(GREEN)🎭 Running Type Inconsistency Failure Demo...$(NC)"
-	chmod +x scripts/demo/trigger-type-inconsistency-failure.sh
-	./scripts/demo/trigger-type-inconsistency-failure.sh
+demo-1-json: ## 🗼 Demo 1b: JSON field mismatch only
+	@echo -e "$(GREEN)🗼 Running Demo 1b: JSON Field Mismatch...$(NC)"
+	./scripts/demo/demo-1-tower-of-babel.sh json
 
+demo-1-type: ## 🗼 Demo 1c: Type inconsistency only
+	@echo -e "$(GREEN)🗼 Running Demo 1c: Type Inconsistency...$(NC)"
+	./scripts/demo/demo-1-tower-of-babel.sh type
 
-phase3-normal-flow: ## ✨ Demo normal flow scenario (everything works)
-	@echo -e "$(GREEN)✨ Running Normal Flow Demo...$(NC)"
-	chmod +x scripts/demo/trigger-normal-flow.sh
-	./scripts/demo/trigger-normal-flow.sh
+demo-2: demo-2-babel-fish ## 🐟 Run Demo 2: Babel Fish (Avro solution)
 
-phase4-demo: ## 🚀 Run Phase 4 Demo (Schema Registry with Avro)
-	@echo -e "$(GREEN)🚀 Running Phase 4 Demo - Schema Registry Integration with Avro...$(NC)"
-	chmod +x scripts/phase4-demo.sh
-	./scripts/phase4-demo.sh
+demo-2-babel-fish: ## 🐟 Demo 2: Babel Fish - Schema Registry Solution
+	@echo -e "$(GREEN)🐟 Running Demo 2: Babel Fish - Schema Registry Solution...$(NC)"
+	./scripts/demo/demo-2-babel-fish.sh
 
-phase4-test: ## 🧪 Run Phase 4 Tests (Schema Registry with Avro)
-	@echo -e "$(GREEN)🧪 Running Phase 4 Test Suite - Schema Registry Integration with Avro...$(NC)"
-	chmod +x scripts/test-phase4.sh
-	./scripts/test-phase4.sh
+demo-2-comprehensive: ## 🐟 Demo 2: Babel Fish - Comprehensive Test
+	@echo -e "$(GREEN)🐟 Running Demo 2: Babel Fish - Comprehensive...$(NC)"
+	./scripts/demo/demo-2-babel-fish-comprehensive.sh
+
+demo-3: demo-3-safe-evolution ## 🔄 Run Demo 3: Safe Evolution
+
+demo-3-safe-evolution: ## 🔄 Demo 3: Safe Evolution - Schema Compatibility
+	@echo -e "$(GREEN)🔄 Running Demo 3: Safe Evolution - Schema Compatibility...$(NC)"
+	./scripts/demo/demo-3-safe-evolution.sh
+
+demo-4: demo-4-breaking-change-blocked ## 🛡️  Run Demo 4: Prevented Disasters
+
+demo-4-breaking-change-blocked: ## 🛡️  Demo 4: Prevented Disasters - Breaking Changes Blocked
+	@echo -e "$(GREEN)🛡️  Running Demo 4: Prevented Disasters - Breaking Changes Blocked...$(NC)"
+	./scripts/demo/demo-4-breaking-change-blocked.sh
+
+demo-all: ## 🎭 Run all demos in sequence
+	@echo -e "$(GREEN)🎭 Running all demos in sequence...$(NC)"
+	@echo -e "$(BLUE)Demo 1: Tower of Babel$(NC)"
+	./scripts/demo/demo-1-tower-of-babel.sh
+	@echo -e "$(BLUE)Demo 2: Babel Fish$(NC)"
+	./scripts/demo/demo-2-babel-fish.sh
+	@echo -e "$(BLUE)Demo 3: Safe Evolution$(NC)"
+	./scripts/demo/demo-3-safe-evolution.sh
+	@echo -e "$(BLUE)Demo 4: Prevented Disasters$(NC)"
+	./scripts/demo/demo-4-breaking-change-blocked.sh
+	@echo -e "$(GREEN)🎉 All demos complete!$(NC)"
+
+# ============================================================================
+# Test Scripts - New Naming Convention
+# ============================================================================
+
+test-1: test-1-serialization-failures ## 🧪 Run Test 1: Serialization Failures
+
+test-1-serialization-failures: ## 🧪 Test 1: Serialization Failures
+	@echo -e "$(GREEN)🧪 Running Test 1: Serialization Failures...$(NC)"
+	./scripts/test/test-1-serialization-failures.sh
+
+test-2: test-2-avro-integration ## 🧪 Run Test 2: Avro Integration
+
+test-2-avro-integration: ## 🧪 Test 2: Avro Integration
+	@echo -e "$(GREEN)🧪 Running Test 2: Avro Integration...$(NC)"
+	./scripts/test/test-2-avro-integration.sh
+
+test-3: test-3-schema-evolution ## 🧪 Run Test 3: Schema Evolution
+
+test-3-schema-evolution: ## 🧪 Test 3: Schema Evolution
+	@echo -e "$(GREEN)🧪 Running Test 3: Schema Evolution...$(NC)"
+	./scripts/test/test-3-schema-evolution.sh
+
+test-4: test-4-compatibility-checks ## 🧪 Run Test 4: Compatibility Checks
+
+test-4-compatibility-checks: ## 🧪 Test 4: Compatibility Checks
+	@echo -e "$(GREEN)🧪 Running Test 4: Compatibility Checks...$(NC)"
+	./scripts/test/test-4-compatibility-checks.sh
+
+test-all: ## 🧪 Run all tests
+	@echo -e "$(GREEN)🧪 Running all tests...$(NC)"
+	@PASSED=0; FAILED=0; \
+	for test in ./scripts/test/test-*.sh; do \
+		echo -e "$(BLUE)Running $$test...$(NC)"; \
+		if $$test; then \
+			PASSED=$$((PASSED + 1)); \
+		else \
+			FAILED=$$((FAILED + 1)); \
+		fi; \
+		echo ""; \
+	done; \
+	echo -e "$(BLUE)━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━$(NC)"; \
+	echo -e "$(BLUE)Test Results:$(NC)"; \
+	echo -e "$(GREEN)Passed: $$PASSED$(NC)"; \
+	if [ $$FAILED -gt 0 ]; then \
+		echo -e "$(RED)Failed: $$FAILED$(NC)"; \
+		exit 1; \
+	else \
+		echo -e "$(GREEN)Failed: 0$(NC)"; \
+		echo -e "$(GREEN)🎉 All tests passed!$(NC)"; \
+	fi
+
+# ============================================================================
+# Legacy Demo Targets (Deprecated - use demo-1, demo-2, etc.)
+# ============================================================================
+
+phase3-java-serialization: demo-1-java ## 🎭 [DEPRECATED] Use demo-1-java instead
+
+phase3-json-mismatch: demo-1-json ## 🎭 [DEPRECATED] Use demo-1-json instead
+
+phase3-type-inconsistency: demo-1-type ## 🎭 [DEPRECATED] Use demo-1-type instead
+
+phase3-normal-flow: demo-2-babel-fish ## ✨ [DEPRECATED] Use demo-2-babel-fish instead
+
+phase4-demo: demo-2-comprehensive ## 🚀 [DEPRECATED] Use demo-2-comprehensive instead
+
+phase4-test: test-2-avro-integration ## 🧪 [DEPRECATED] Use test-2-avro-integration instead
 
 inventory-service-smoke-test: ## 🔥 Run smoke tests for the Python inventory service
 	@echo -e "$(GREEN)🔥 Running Smoke Tests for Python Inventory Service...$(NC)"
@@ -231,3 +333,29 @@ analytics-api-smoke-test: ## 🔥 Run smoke tests for the Node.js analytics API
 	@echo -e "$(BLUE)Testing Node.js dependencies and critical functionality...$(NC)"
 	chmod +x services/analytics-api/scripts/smoke-test.js
 	cd services/analytics-api && node scripts/smoke-test.js
+
+demo-workflow: ## 📖 Show recommended demo workflow
+	@echo -e "$(BLUE)📖 Recommended Demo Workflow$(NC)"
+	@echo -e "$(CYAN)━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━$(NC)"
+	@echo -e "$(YELLOW)1. Setup Infrastructure:$(NC)"
+	@echo -e "   $(GREEN)make setup$(NC)                    # Start Kafka + Schema Registry"
+	@echo -e ""
+	@echo -e "$(YELLOW)2. Start Services (in separate terminals):$(NC)"
+	@echo -e "   $(GREEN)make run-order-service$(NC)        # Terminal 1: Java/Spring Boot"
+	@echo -e "   $(GREEN)make run-inventory-service$(NC)    # Terminal 2: Python/FastAPI"
+	@echo -e "   $(GREEN)make run-analytics-api$(NC)        # Terminal 3: Node.js/Express"
+	@echo -e ""
+	@echo -e "$(YELLOW)3. Run Demos (in order):$(NC)"
+	@echo -e "   $(GREEN)make demo-1$(NC)                   # Tower of Babel (chaos)"
+	@echo -e "   $(GREEN)make demo-2$(NC)                   # Babel Fish (solution)"
+	@echo -e "   $(GREEN)make demo-3$(NC)                   # Safe Evolution"
+	@echo -e "   $(GREEN)make demo-4$(NC)                   # Prevented Disasters"
+	@echo -e ""
+	@echo -e "$(YELLOW)4. Run Tests (optional):$(NC)"
+	@echo -e "   $(GREEN)make test-all$(NC)                 # Run all automated tests"
+	@echo -e ""
+	@echo -e "$(YELLOW)5. Quick Commands:$(NC)"
+	@echo -e "   $(GREEN)make demo-all$(NC)                 # Run all demos in sequence"
+	@echo -e "   $(GREEN)make status$(NC)                   # Check service status"
+	@echo -e "   $(GREEN)make demo-reset$(NC)               # Reset demo environment"
+	@echo -e "$(CYAN)━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━$(NC)"
