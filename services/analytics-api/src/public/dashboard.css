@@ -1,0 +1,280 @@
+/* CSS Variables for Color Palette and Spacing */
+:root {
+    /* Color Palette */
+    --color-primary-bg: #f5f7fa;
+    --color-card-bg: #ffffff;
+    --color-border: #e1e8ed;
+    --color-text-primary: #14171a;
+    --color-text-secondary: #657786;
+    --color-success: #17bf63;
+    --color-error: #e0245e;
+    --color-warning: #ff9800;
+    --color-info: #1da1f2;
+    
+    /* Spacing Scale */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 20px;
+    --spacing-xl: 24px;
+    --spacing-xxl: 32px;
+    
+    /* Typography Scale */
+    --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-size-xs: 12px;
+    --font-size-sm: 14px;
+    --font-size-md: 16px;
+    --font-size-lg: 18px;
+    --font-size-xl: 24px;
+    --font-weight-regular: 400;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    --line-height-tight: 1.2;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.6;
+    
+    /* Layout */
+    --container-max-width: 1200px;
+    --border-radius: 8px;
+    --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-normal);
+    color: var(--color-text-primary);
+    background-color: var(--color-primary-bg);
+}
+
+.container {
+    max-width: var(--container-max-width);
+    margin: 0 auto;
+    padding: 0 var(--spacing-lg);
+}
+
+/* Header Styles */
+header {
+    background-color: var(--color-card-bg);
+    border-bottom: 1px solid var(--color-border);
+    padding: var(--spacing-xl) 0;
+    margin-bottom: var(--spacing-xl);
+}
+
+header h1 {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-sm);
+}
+
+header .subtitle {
+    font-size: var(--font-size-md);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-sm);
+}
+
+header .last-update {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+}
+
+/* Error Banner */
+.error-banner {
+    background-color: #f8d7da;
+    border: 1px solid var(--color-error);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    color: var(--color-error);
+    font-size: var(--font-size-sm);
+}
+
+/* Stats Section */
+.stats-section {
+    margin-bottom: var(--spacing-xl);
+}
+
+.stats-section h2 {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-md);
+}
+
+.stats-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--spacing-md);
+}
+
+.stat-card {
+    background-color: var(--color-card-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    box-shadow: var(--box-shadow);
+    border-left: 4px solid var(--color-info);
+}
+
+.stat-card h3 {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    margin-bottom: var(--spacing-sm);
+}
+
+.stat-card p {
+    font-size: 28px;
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin: 0;
+}
+
+/* Orders Table Section */
+.orders-section {
+    margin-bottom: var(--spacing-xl);
+}
+
+.orders-section h2 {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-md);
+}
+
+.table-container {
+    background-color: var(--color-card-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    overflow-x: auto;
+}
+
+#orders-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#orders-table thead {
+    background-color: var(--color-primary-bg);
+}
+
+#orders-table th {
+    padding: var(--spacing-md);
+    text-align: left;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    border-bottom: 2px solid var(--color-border);
+}
+
+#orders-table td {
+    padding: var(--spacing-md);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-primary);
+    border-bottom: 1px solid var(--color-border);
+}
+
+#orders-table tbody tr:hover {
+    background-color: var(--color-primary-bg);
+}
+
+#orders-table tbody tr:nth-child(even) {
+    background-color: #fafbfc;
+}
+
+#orders-table tbody tr:nth-child(even):hover {
+    background-color: var(--color-primary-bg);
+}
+
+/* Status Badges */
+.status {
+    display: inline-block;
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: 16px;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    text-transform: uppercase;
+}
+
+.status-completed {
+    background-color: #d4edda;
+    color: var(--color-success);
+}
+
+.status-pending {
+    background-color: #fff3cd;
+    color: var(--color-warning);
+}
+
+.status-failed {
+    background-color: #f8d7da;
+    color: var(--color-error);
+}
+
+/* Empty State */
+.no-data {
+    padding: var(--spacing-xxl);
+    text-align: center;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-md);
+}
+
+/* Footer */
+footer {
+    background-color: var(--color-card-bg);
+    border-top: 1px solid var(--color-border);
+    padding: var(--spacing-lg) 0;
+    margin-top: var(--spacing-xxl);
+    text-align: center;
+}
+
+footer p {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 var(--spacing-md);
+    }
+
+    header {
+        padding: var(--spacing-lg) 0;
+    }
+
+    header h1 {
+        font-size: var(--font-size-lg);
+    }
+
+    header .subtitle {
+        font-size: var(--font-size-sm);
+    }
+
+    .stats-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .table-container {
+        overflow-x: auto;
+    }
+
+    #orders-table {
+        font-size: var(--font-size-xs);
+    }
+
+    #orders-table th,
+    #orders-table td {
+        padding: var(--spacing-sm);
+    }
+}
