@@ -24,19 +24,11 @@ BREAKING_SCHEMA=$(cat <<'EOF'
 {
   "type": "record",
   "name": "OrderEvent",
-  "namespace": "com.example.orders",
+  "namespace": "com.company.orders",
   "fields": [
     {"name": "orderId", "type": "string"},
     {"name": "amount", "type": "double"},
-    {"name": "timestamp", "type": "long"},
-    {"name": "items", "type": {"type": "array", "items": {
-      "type": "record", "name": "OrderItem",
-      "fields": [
-        {"name": "productId", "type": "string"},
-        {"name": "quantity", "type": "int"},
-        {"name": "price", "type": "double"}
-      ]
-    }}}
+    {"name": "status", "type": "string"}
   ]
 }
 EOF
@@ -65,20 +57,12 @@ TYPE_CHANGE_SCHEMA=$(cat <<'EOF'
 {
   "type": "record",
   "name": "OrderEvent",
-  "namespace": "com.example.orders",
+  "namespace": "com.company.orders",
   "fields": [
     {"name": "orderId", "type": "string"},
     {"name": "userId", "type": "string"},
     {"name": "amount", "type": "string"},
-    {"name": "timestamp", "type": "long"},
-    {"name": "items", "type": {"type": "array", "items": {
-      "type": "record", "name": "OrderItem",
-      "fields": [
-        {"name": "productId", "type": "string"},
-        {"name": "quantity", "type": "int"},
-        {"name": "price", "type": "double"}
-      ]
-    }}}
+    {"name": "status", "type": "string"}
   ]
 }
 EOF
