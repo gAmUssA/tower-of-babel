@@ -19,13 +19,13 @@ import java.util.concurrent.ConcurrentHashMap
 
 @Service
 class OrderService(
-    @Value("\${kafka.bootstrap-servers:localhost:29092}")
+    @param:Value("\${kafka.bootstrap-servers:localhost:29092}")
     private val bootstrapServers: String,
     
-    @Value("\${kafka.topic.orders:orders}")
+    @param:Value("\${kafka.topic.orders:orders}")
     private val ordersTopic: String,
     
-    @Value("\${spring.kafka.properties.schema.registry.url:http://localhost:8081}")
+    @param:Value("\${spring.kafka.properties.schema.registry.url:http://localhost:8081}")
     private val schemaRegistryUrl: String
 ) {
     private val logger = LoggerFactory.getLogger(OrderService::class.java)

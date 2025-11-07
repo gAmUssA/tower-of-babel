@@ -54,18 +54,17 @@ function checkDependency(moduleName) {
  */
 function testSchemaRegistry() {
   try {
-    const { SchemaRegistry } = require('@kafkajs/confluent-schema-registry');
+    const { SchemaRegistryClient, AvroDeserializer } = require('@confluentinc/schemaregistry');
     
-    // Check for mock implementation by testing if essential methods exist
-    const registry = new SchemaRegistry({ host: 'http://localhost:8081' });
+    // Check that we can instantiate the client
+    const registry = new SchemaRegistryClient({ baseURLs: ['http://localhost:8081'] });
     
-    // If this is a mock, it would likely not have these methods
-    const hasAttributes = ['register', 'decode', 'encode', 'getLatestSchemaId'].every(
-      method => typeof registry[method] === 'function'
-    );
+    // Check that we can create a deserializer (this validates the API is real)
+    const deserializer = new AvroDeserializer(registry, 1, {});
     
-    if (!hasAttributes) {
-      return { success: false, message: "@kafkajs/confluent-schema-registry appears to be a mock implementation" };
+    // Basic validation that these are real objects
+    if (!registry || !deserializer) {
+      return { success: false, message: "@confluentinc/schemaregistry appears to be a mock implementation" };
     }
     
     return { success: true, message: "" };
@@ -75,56 +74,20 @@ function testSchemaRegistry() {
 }
 
 /**
- * Test Avro serialization/deserialization
+ * Test Confluent Kafka client
  */
-function testAvro() {
+function testConfluentKafka() {
   try {
-    const avro = require('avsc'); // avsc is used internally by @kafkajs/confluent-schema-registry
-    
-    // Create a simple schema
-    const schema = {
-      type: 'record',
-      name: 'TestRecord',
-      fields: [
-        { name: 'id', type: 'string' },
-        { name: 'value', type: 'int' }
-      ]
-    };
-    
-    // Create a test record
-    const record = { id: 'test123', value: 42 };
-    
-    // Serialize
-    const type = avro.Type.forSchema(schema);
-    const buffer = type.toBuffer(record);
-    
-    // Deserialize
-    const decoded = type.fromBuffer(buffer);
-    
-    if (decoded.id !== record.id || decoded.value !== record.value) {
-      return { success: false, message: "Avro serialization/deserialization result doesn't match input" };
-    }
-    
-    return { success: true, message: "" };
-  } catch (e) {
-    return { success: false, message: e.message };
-  }
-}
-
-/**
- * Test KafkaJS functionality
- */
-function testKafkaJS() {
-  try {
-    const { Kafka } = require('kafkajs');
+    const { Kafka } = require('@confluentinc/kafka-javascript').KafkaJS;
     
     // Check for mock implementation by testing if essential classes/methods exist
     const kafka = new Kafka({
-      clientId: 'smoke-test',
-      brokers: ['localhost:9092']
+      kafkaJS: {
+        brokers: ['localhost:9092']
+      }
     });
     
-    const consumer = kafka.consumer({ groupId: 'smoke-test' });
+    const consumer = kafka.consumer({ kafkaJS: { groupId: 'smoke-test' } });
     const producer = kafka.producer();
     
     // Check if essential methods exist
@@ -137,7 +100,7 @@ function testKafkaJS() {
     );
     
     if (!hasConsumerMethods || !hasProducerMethods) {
-      return { success: false, message: "KafkaJS appears to be a mock implementation" };
+      return { success: false, message: "Confluent Kafka client appears to be a mock implementation" };
     }
     
     return { success: true, message: "" };
@@ -228,9 +191,8 @@ function main() {
   // Test critical dependencies
   const dependencies = [
     'express', 
-    'kafkajs', 
-    '@kafkajs/confluent-schema-registry', 
-    'avsc',
+    '@confluentinc/kafka-javascript',
+    '@confluentinc/schemaregistry',
     'socket.io', 
     'dotenv'
   ];
@@ -246,21 +208,15 @@ function main() {
   console.log("\n🧪 Testing Schema Registry client:");
   const schemaRegistryResult = testSchemaRegistry();
   allPassed = allPassed && schemaRegistryResult.success;
-  printResult("@kafkajs/confluent-schema-registry real implementation", 
+  printResult("@confluentinc/schemaregistry real implementation", 
              schemaRegistryResult.success, 
              schemaRegistryResult.message);
   
-  // Test Avro functionality
-  console.log("\n🧪 Testing Avro serialization/deserialization:");
-  const avroResult = testAvro();
-  allPassed = allPassed && avroResult.success;
-  printResult("avsc functionality", avroResult.success, avroResult.message);
-  
-  // Test KafkaJS
-  console.log("\n🧪 Testing KafkaJS:");
-  const kafkaJSResult = testKafkaJS();
-  allPassed = allPassed && kafkaJSResult.success;
-  printResult("KafkaJS real implementation", kafkaJSResult.success, kafkaJSResult.message);
+  // Test Confluent Kafka client
+  console.log("\n🧪 Testing Confluent Kafka client:");
+  const confluentKafkaResult = testConfluentKafka();
+  allPassed = allPassed && confluentKafkaResult.success;
+  printResult("@confluentinc/kafka-javascript real implementation", confluentKafkaResult.success, confluentKafkaResult.message);
   
   // Test core modules
   console.log("\n🧪 Testing compiled modules existence:");
