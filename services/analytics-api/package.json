@@ -22,7 +22,7 @@
   "license": "MIT",
   "dependencies": {
     "@confluentinc/kafka-javascript": "^1.6.0",
-    "@confluentinc/schemaregistry": "^1.6.0",
+    "@confluentinc/schemaregistry": "^1.7.0",
     "avro-typescript": "^1.0.4",
     "dotenv": "^17.0.0",
     "express": "^5.1.0",
