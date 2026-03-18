@@ -33,7 +33,7 @@ echo -e "${BLUE}${MAGNIFYING} Verifying service availability...${NC}"
 
 # Check Schema Registry
 echo -ne "${CYAN}Schema Registry...${NC} "
-if curl -s http://localhost:8081/subjects | grep -q ""; then
+if curl -s http://localhost:8081/subjects 2>/dev/null | jq -e 'type == "array"' > /dev/null 2>&1; then
     echo -e "${GREEN}${CHECK} Available${NC}"
     # List available schemas
     echo -e "${CYAN}Available schemas:${NC}"
@@ -97,9 +97,9 @@ echo -e "\n${BLUE}${TEST} Test 2: Order Creation with Avro Serialization${NC}"
 echo -e "${CYAN}----------------------------------------------------${NC}"
 
 # Get initial error counts BEFORE creating the order
-INVENTORY_ERRORS=$(curl -s http://localhost:9000/errors | grep -o '"error_count":[0-9]*' | head -1 | cut -d':' -f2)
+INVENTORY_ERRORS=$(curl -s http://localhost:9000/errors | jq '[.json_consumer.error_count, .avro_consumer.error_count] | add // 0')
 INVENTORY_ERRORS=${INVENTORY_ERRORS:-0}
-ANALYTICS_ERRORS=$(curl -s http://localhost:9300/api/errors | grep -o '"errorCount":[0-9]*' | head -1 | cut -d':' -f2)
+ANALYTICS_ERRORS=$(curl -s http://localhost:9300/api/errors | jq '[.json.errorCount, .avro.errorCount] | add // 0')
 ANALYTICS_ERRORS=${ANALYTICS_ERRORS:-0}
 
 # Create a test order
@@ -169,9 +169,9 @@ fi
 echo -e "\n${BLUE}${TEST} Test 5: Error Detection${NC}"
 echo -e "${CYAN}----------------------------------------------------${NC}"
 # Check for any new errors
-NEW_INVENTORY_ERRORS=$(curl -s http://localhost:9000/errors | grep -o '"error_count":[0-9]*' | head -1 | cut -d':' -f2)
+NEW_INVENTORY_ERRORS=$(curl -s http://localhost:9000/errors | jq '[.json_consumer.error_count, .avro_consumer.error_count] | add // 0')
 NEW_INVENTORY_ERRORS=${NEW_INVENTORY_ERRORS:-0}
-NEW_ANALYTICS_ERRORS=$(curl -s http://localhost:9300/api/errors | grep -o '"errorCount":[0-9]*' | head -1 | cut -d':' -f2)
+NEW_ANALYTICS_ERRORS=$(curl -s http://localhost:9300/api/errors | jq '[.json.errorCount, .avro.errorCount] | add // 0')
 NEW_ANALYTICS_ERRORS=${NEW_ANALYTICS_ERRORS:-0}
 
 INVENTORY_ERROR_DIFF=$((NEW_INVENTORY_ERRORS - INVENTORY_ERRORS))
@@ -219,7 +219,7 @@ echo -e "\n${BLUE}${CHART} Phase 4 Test Results Summary${NC}"
 echo -e "${CYAN}=====================================================${NC}"
 
 TEST_FAILURES=0
-if ! curl -s http://localhost:8081/subjects/orders-value/versions | grep -q ""; then
+if ! curl -s http://localhost:8081/subjects/orders-value/versions 2>/dev/null | jq -e 'type == "array"' > /dev/null 2>&1; then
     echo -e "${RED}${CROSS} Test 1: Schema Registration - FAILED${NC}"
     TEST_FAILURES=$((TEST_FAILURES + 1))
 else
@@ -254,7 +254,7 @@ else
     echo -e "${GREEN}${CHECK} Test 5: Error Detection - PASSED${NC}"
 fi
 
-if ! curl -s http://localhost:8081/subjects/orders-value/versions | grep -q ""; then
+if ! curl -s http://localhost:8081/subjects/orders-value/versions 2>/dev/null | jq -e 'type == "array"' > /dev/null 2>&1; then
     echo -e "${RED}${CROSS} Test 6: Schema Validation - FAILED${NC}"
     TEST_FAILURES=$((TEST_FAILURES + 1))
 else

@@ -26,8 +26,7 @@ export interface Order {
 }
 
 export interface OrderItem {
-  // Intentional type inconsistency: productId is string in Java but number here
-  productId: number;
+  productId: string;
   
   quantity: number;
   

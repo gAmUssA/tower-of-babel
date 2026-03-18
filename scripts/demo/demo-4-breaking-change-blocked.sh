@@ -12,6 +12,22 @@ PURPLE='\033[0;35m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
+# Interactive mode support
+INTERACTIVE=false
+for arg in "$@"; do
+  case "$arg" in
+    -i|--interactive) INTERACTIVE=true ;;
+  esac
+done
+
+pause() {
+  if [ "$INTERACTIVE" = true ]; then
+    echo ""
+    read -r -p "  Press Enter to continue..."
+    echo ""
+  fi
+}
+
 echo -e "${BLUE}🛡️  Demo 4: Prevented Disasters - Breaking Changes Blocked${NC}"
 echo -e "${CYAN}=====================================================${NC}"
 echo -e "${YELLOW}This demo shows how Schema Registry prevents incompatible${NC}"
@@ -28,6 +44,13 @@ fi
 echo -e "${GREEN}✅ Schema Registry is running${NC}\n"
 
 SUBJECT="orders-value"
+
+# Ensure BACKWARD compatibility is enforced for this demo
+echo -e "${BLUE}🔒 Ensuring BACKWARD compatibility mode is set...${NC}"
+curl -s -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+    --data '{"compatibility": "BACKWARD"}' \
+    http://localhost:8081/config/$SUBJECT > /dev/null
+echo -e "${GREEN}✅ BACKWARD compatibility mode set${NC}\n"
 
 # Check if schema exists
 echo -e "${BLUE}📋 Step 1: Checking current schema...${NC}"
@@ -115,6 +138,7 @@ else
 fi
 
 echo ""
+pause
 
 # Test 2: Change field type
 echo -e "${PURPLE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -175,6 +199,7 @@ else
 fi
 
 echo ""
+pause
 
 # Test 3: Rename a field
 echo -e "${PURPLE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -235,6 +260,7 @@ else
 fi
 
 echo ""
+pause
 
 # Show compatibility mode
 echo -e "${BLUE}📋 Current compatibility mode:${NC}"

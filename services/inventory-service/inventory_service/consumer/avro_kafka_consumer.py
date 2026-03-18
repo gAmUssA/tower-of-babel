@@ -152,12 +152,13 @@ class AvroOrderKafkaConsumer:
                 raise ValueError("Missing orderId field in Avro message")
                 
             # For the demo, store the order information with consistent field names
-            # Note: Avro schema doesn't have product_id or quantity, so we use placeholders
+            # Note: Avro schema doesn't have product_id or quantity, so we use defaults
             inventory_entry = {
                 "order_id": order_id,
                 "user_id": user_id,
-                "product_id": f"avro-order-{order_id[:8]}",  # Generate a placeholder product_id
-                "quantity": int(amount) if amount else 1,  # Convert amount to quantity (simplified)
+                "product_id": f"avro-order-{order_id[:8]}",
+                "quantity": 1,  # Default: Avro schema doesn't include item quantity
+                "amount": amount,
                 "status": status if status else "PROCESSED",
                 "source": "avro"
             }

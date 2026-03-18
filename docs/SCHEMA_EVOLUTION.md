@@ -14,6 +14,7 @@ Schema evolution demonstrates how Schema Registry enables safe changes to data f
 **Schema**: `schemas/v1/order-event.avsc` → `schemas/v2/order-event.avsc`
 
 **V1 Schema (Original)**:
+
 ```json
 {
   "type": "record",
@@ -29,6 +30,7 @@ Schema evolution demonstrates how Schema Registry enables safe changes to data f
 ```
 
 **V2 Schema (Enhanced)**:
+
 ```json
 {
   "type": "record",
@@ -46,10 +48,12 @@ Schema evolution demonstrates how Schema Registry enables safe changes to data f
 ```
 
 **Key Changes**:
+
 - Added `orderTimestamp` as optional field with null default
 - Added `metadata` as optional map with null default
 
 **Compatibility**: ✅ **BACKWARD COMPATIBLE**
+
 - Old consumers (V1) can read messages produced by new producers (V2)
 - New optional fields are ignored by old consumers
 - Default values ensure no data corruption
@@ -58,6 +62,7 @@ Schema evolution demonstrates how Schema Registry enables safe changes to data f
 
 **Scenario**: New consumers reading old data
 **Result**: ✅ **FORWARD COMPATIBLE**
+
 - New consumers (V2) can read messages produced by old producers (V1)
 - Missing optional fields use their default values (null)
 - No data loss occurs
@@ -75,23 +80,24 @@ Schema evolution demonstrates how Schema Registry enables safe changes to data f
   "fields": [
     {"name": "orderId", "type": "string"},
     {"name": "amount", "type": "double"},
-    {"name": "status", "type": "string"},
-    {"name": "orderTimestamp", "type": "long"}
+    {"name": "status", "type": "string"}
   ]
 }
 ```
 
 **Breaking Changes**:
+
 - Removed required field `userId`
-- Made `orderTimestamp` required (non-nullable)
 
 **Compatibility**: ❌ **NOT COMPATIBLE**
+
 - Schema Registry will reject this schema
 - Demonstrates protection against breaking changes
 
 ## Demo Commands
 
 ### Run Complete Evolution Demo
+
 ```bash
 make demo-evolution
 ```
@@ -99,11 +105,13 @@ make demo-evolution
 ### Step-by-Step Manual Demo
 
 1. **Setup Environment**:
+
    ```bash
    make setup
    ```
 
 2. **Register V1 Schema**:
+
    ```bash
    curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" \
      --data '{"schema":"'$(cat schemas/v1/order-event.avsc | jq -c tostring)'"}" \
@@ -111,6 +119,7 @@ make demo-evolution
    ```
 
 3. **Test V2 Compatibility**:
+
    ```bash
    curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" \
      --data '{"schema":"'$(cat schemas/v2/order-event.avsc | jq -c tostring)'"}" \
@@ -118,6 +127,7 @@ make demo-evolution
    ```
 
 4. **Register V2 Schema**:
+
    ```bash
    curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" \
      --data '{"schema":"'$(cat schemas/v2/order-event.avsc | jq -c tostring)'"}" \
@@ -125,6 +135,7 @@ make demo-evolution
    ```
 
 5. **Test Incompatible Schema**:
+
    ```bash
    curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" \
      --data '{"schema":"'$(cat schemas/incompatible/order-event.avsc | jq -c tostring)'"}" \
@@ -136,31 +147,40 @@ make demo-evolution
 When schemas evolve, code generation automatically adapts:
 
 ### Java (Gradle + Kotlin DSL)
+
 ```bash
 cd services/order-service
 ./gradlew generateAvroJava
 ```
+
 Generated POJOs reflect the latest schema with:
+
 - New optional fields as nullable types
 - Default value handling
 - Backward compatibility methods
 
 ### Python (FastAPI)
+
 ```bash
 cd services/inventory-service
 python scripts/generate_classes.py
 ```
+
 Generated dataclasses include:
+
 - Optional fields with default values
 - Type hints for better IDE support
 - Backward compatibility support
 
 ### TypeScript (Node.js)
+
 ```bash
 cd services/analytics-api
 npm run generate-types
 ```
+
 Generated interfaces provide:
+
 - Optional properties for new fields
 - Type safety across schema versions
 - IntelliSense support
@@ -168,6 +188,7 @@ Generated interfaces provide:
 ## Testing Scenarios
 
 ### Backward Compatibility Test
+
 1. Start services with V1 schema
 2. Produce messages with V1 format
 3. Upgrade producer to V2 schema
@@ -175,26 +196,28 @@ Generated interfaces provide:
 5. Verify new fields are handled correctly
 
 ### Forward Compatibility Test
+
 1. Start services with V2 schema
 2. Simulate receiving V1 messages
 3. Verify new consumers handle missing fields
 4. Verify default values are applied
 
 ### Incompatible Change Test
+
 1. Try to register incompatible schema
 2. Verify Schema Registry rejects it
 3. Demonstrate protection mechanism
 
 ## Expected Results
 
-| Test Case | Expected Result | Verification |
-|-----------|----------------|--------------|
-| V1 → V2 Registration | ✅ Success | Schema ID returned |
-| V2 Compatibility Check | ✅ Compatible | `is_compatible: true` |
-| V1 Consumer + V2 Producer | ✅ Works | No errors, new fields ignored |
-| V2 Consumer + V1 Producer | ✅ Works | Default values used |
-| Incompatible Registration | ❌ Rejected | Error response |
-| Incompatible Compatibility | ❌ Not Compatible | `is_compatible: false` |
+| Test Case                  | Expected Result  | Verification                  |
+|----------------------------|------------------|-------------------------------|
+| V1 → V2 Registration       | ✅ Success        | Schema ID returned            |
+| V2 Compatibility Check     | ✅ Compatible     | `is_compatible: true`         |
+| V1 Consumer + V2 Producer  | ✅ Works          | No errors, new fields ignored |
+| V2 Consumer + V1 Producer  | ✅ Works          | Default values used           |
+| Incompatible Registration  | ❌ Rejected       | Error response                |
+| Incompatible Compatibility | ❌ Not Compatible | `is_compatible: false`        |
 
 ## Demo Talking Points
 
@@ -221,6 +244,7 @@ Generated interfaces provide:
 ## Troubleshooting
 
 ### Schema Registry Not Available
+
 ```bash
 # Check if running
 curl http://localhost:8081/subjects
@@ -230,11 +254,13 @@ make setup
 ```
 
 ### Compatibility Errors
+
 - Check schema syntax with `jq .` validation
 - Verify required fields are not removed
 - Ensure new fields have default values
 
 ### Code Generation Issues
+
 ```bash
 # Clean and regenerate
 make clean

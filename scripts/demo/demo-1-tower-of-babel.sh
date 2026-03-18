@@ -18,17 +18,32 @@ echo -e "${YELLOW}This demo shows the problems that occur when services use${NC}
 echo -e "${YELLOW}different serialization formats without a common schema.${NC}"
 echo -e "${CYAN}=====================================================${NC}\n"
 
-# Parse command line arguments
-SCENARIO=${1:-all}
+# Interactive mode support
+INTERACTIVE=false
+SCENARIO="all"
+for arg in "$@"; do
+  case "$arg" in
+    -i|--interactive) INTERACTIVE=true ;;
+    all|java|json|type) SCENARIO="$arg" ;;
+    *)
+      echo -e "${RED}Usage: $0 [-i|--interactive] [all|java|json|type]${NC}"
+      echo -e "${YELLOW}  -i   - Interactive mode (pause between scenarios)${NC}"
+      echo -e "${YELLOW}  all  - Run all chaos scenarios (default)${NC}"
+      echo -e "${YELLOW}  java - Java serialization failure${NC}"
+      echo -e "${YELLOW}  json - JSON field name mismatch${NC}"
+      echo -e "${YELLOW}  type - Type inconsistency${NC}"
+      exit 1
+      ;;
+  esac
+done
 
-if [ "$SCENARIO" != "all" ] && [ "$SCENARIO" != "java" ] && [ "$SCENARIO" != "json" ] && [ "$SCENARIO" != "type" ]; then
-    echo -e "${RED}Usage: $0 [all|java|json|type]${NC}"
-    echo -e "${YELLOW}  all  - Run all chaos scenarios (default)${NC}"
-    echo -e "${YELLOW}  java - Java serialization failure${NC}"
-    echo -e "${YELLOW}  json - JSON field name mismatch${NC}"
-    echo -e "${YELLOW}  type - Type inconsistency${NC}"
-    exit 1
-fi
+pause() {
+  if [ "$INTERACTIVE" = true ]; then
+    echo ""
+    read -r -p "  Press Enter to continue..."
+    echo ""
+  fi
+}
 
 # Check if services are running
 echo -e "${BLUE}🔍 Checking if services are running...${NC}"
@@ -64,9 +79,9 @@ if [ "$SCENARIO" = "all" ] || [ "$SCENARIO" = "java" ]; then
     echo -e "${YELLOW}Testing: Java Object Serialization → Python/Node.js${NC}\n"
 
     # Get initial error counts
-    INITIAL_INV_ERRORS=$(curl -s http://localhost:9000/errors | grep -o '"error_count":[0-9]*' | head -1 | cut -d':' -f2)
+    INITIAL_INV_ERRORS=$(curl -s http://localhost:9000/errors | jq '[.json_consumer.error_count, .avro_consumer.error_count] | add // 0')
     INITIAL_INV_ERRORS=${INITIAL_INV_ERRORS:-0}
-    INITIAL_ANA_ERRORS=$(curl -s http://localhost:9300/api/errors | grep -o '"errorCount":[0-9]*' | head -1 | cut -d':' -f2)
+    INITIAL_ANA_ERRORS=$(curl -s http://localhost:9300/api/errors | jq '[.json.errorCount, .avro.errorCount] | add // 0')
     INITIAL_ANA_ERRORS=${INITIAL_ANA_ERRORS:-0}
 
     echo -e "${CYAN}Sending order with Java serialization...${NC}"
@@ -90,9 +105,9 @@ if [ "$SCENARIO" = "all" ] || [ "$SCENARIO" = "java" ]; then
     sleep 5
 
     # Check for new errors
-    NEW_INV_ERRORS=$(curl -s http://localhost:9000/errors | grep -o '"error_count":[0-9]*' | head -1 | cut -d':' -f2)
+    NEW_INV_ERRORS=$(curl -s http://localhost:9000/errors | jq '[.json_consumer.error_count, .avro_consumer.error_count] | add // 0')
     NEW_INV_ERRORS=${NEW_INV_ERRORS:-0}
-    NEW_ANA_ERRORS=$(curl -s http://localhost:9300/api/errors | grep -o '"errorCount":[0-9]*' | head -1 | cut -d':' -f2)
+    NEW_ANA_ERRORS=$(curl -s http://localhost:9300/api/errors | jq '[.json.errorCount, .avro.errorCount] | add // 0')
     NEW_ANA_ERRORS=${NEW_ANA_ERRORS:-0}
 
     INV_ERROR_DIFF=$((NEW_INV_ERRORS - INITIAL_INV_ERRORS))
@@ -108,6 +123,7 @@ if [ "$SCENARIO" = "all" ] || [ "$SCENARIO" = "java" ]; then
     else
       echo -e "${YELLOW}⚠️  No errors detected (unexpected)${NC}\n"
     fi
+    pause
 fi
 
 # Scenario 1b: JSON Field Name Mismatch
@@ -148,6 +164,7 @@ if [ "$SCENARIO" = "all" ] || [ "$SCENARIO" = "json" ]; then
     else
       echo -e "${RED}❌ Inventory Service did not process the order${NC}\n"
     fi
+    pause
 fi
 
 # Scenario 1c: Type Inconsistency
@@ -158,20 +175,21 @@ if [ "$SCENARIO" = "all" ] || [ "$SCENARIO" = "type" ]; then
     echo -e "${YELLOW}Testing: String vs Number type mismatches${NC}\n"
 
     # Get initial error count and messages
-    INITIAL_ANA_ERRORS=$(curl -s http://localhost:9300/api/errors | grep -o '"errorCount":[0-9]*' | head -1 | cut -d':' -f2)
+    INITIAL_ANA_ERRORS=$(curl -s http://localhost:9300/api/errors | jq '[.json.errorCount, .avro.errorCount] | add // 0')
     INITIAL_ANA_ERRORS=${INITIAL_ANA_ERRORS:-0}
 
     echo -e "${CYAN}Sending orders with type issues...${NC}"
     echo -e "${YELLOW}Example 1: amount as string instead of number${NC}"
-    echo -e "${BLUE}  Sent:     amount: \"not-a-number\" (string)${NC}"
+    echo -e "${BLUE}  Sent:     amount: \"99.99\" (string)${NC}"
     echo -e "${BLUE}  Expected: amount: 99.99 (number)${NC}\n"
-    
-    # Order with invalid amount
+
+    # Order with amount as quoted string — JSON silently accepts it,
+    # but consumers expecting a number type may break or silently coerce
     ORDER_RESPONSE_1=$(curl -s -X POST http://localhost:9080/orders \
       -H "Content-Type: application/json" \
       -d '{
         "userId": "user-type-'$(date +%s)'",
-        "amount": "not-a-number",
+        "amount": "99.99",
         "items": [{"productId": "product123", "quantity": 1, "price": 99.99}]
       }')
 
@@ -203,7 +221,7 @@ if [ "$SCENARIO" = "all" ] || [ "$SCENARIO" = "type" ]; then
     sleep 7
 
     # Check for new errors
-    NEW_ANA_ERRORS=$(curl -s http://localhost:9300/api/errors | grep -o '"errorCount":[0-9]*' | head -1 | cut -d':' -f2)
+    NEW_ANA_ERRORS=$(curl -s http://localhost:9300/api/errors | jq '[.json.errorCount, .avro.errorCount] | add // 0')
     NEW_ANA_ERRORS=${NEW_ANA_ERRORS:-0}
     ANA_ERROR_DIFF=$((NEW_ANA_ERRORS - INITIAL_ANA_ERRORS))
 
@@ -218,22 +236,56 @@ if [ "$SCENARIO" = "all" ] || [ "$SCENARIO" = "type" ]; then
       # Show actual error messages
       echo -e "${YELLOW}📋 Recent error messages from Analytics API:${NC}"
       ERROR_DETAILS=$(curl -s http://localhost:9300/api/errors)
-      echo "$ERROR_DETAILS" | jq -r '.recentErrors[]? | "  • \(.timestamp | strftime("%H:%M:%S")): \(.message)"' 2>/dev/null | tail -3 || echo "  (Error details not available)"
+      ERROR_LINES=$(echo "$ERROR_DETAILS" | jq -r '([.json.lastErrors[]?, .avro.lastErrors[]?])[-3:][]? // empty' 2>/dev/null)
+      if [ -n "$ERROR_LINES" ]; then
+        echo "$ERROR_LINES" | while read -r err; do echo "  - $err"; done
+      else
+        echo "  (Error details not available)"
+      fi
       
       echo -e "\n${YELLOW}💡 What happened:${NC}"
-      echo -e "  ${RED}•${NC} Analytics API expects numeric types for calculations"
-      echo -e "  ${RED}•${NC} Received string values that cannot be parsed as numbers"
-      echo -e "  ${RED}•${NC} Type coercion failed, causing processing errors"
-      echo -e "  ${RED}•${NC} Data inconsistency between producer and consumer"
+      echo -e "  ${RED}•${NC} JSON accepted string \"99.99\" where number 99.99 was intended"
+      echo -e "  ${RED}•${NC} No schema contract to enforce correct types at produce time"
+      echo -e "  ${RED}•${NC} Consumers must guess and coerce types at runtime"
+      echo -e "  ${RED}•${NC} productId \"product123\" parsed as NaN by Analytics API (expects number)"
       
       echo -e "\n${YELLOW}🔍 To see detailed errors, visit:${NC}"
       echo -e "  ${BLUE}http://localhost:9300/analytics/dashboard${NC}"
       echo -e "  ${BLUE}http://localhost:9300/api/errors${NC}\n"
     else
-      echo -e "${YELLOW}⚠️  No errors detected - service handled gracefully${NC}"
-      echo -e "${YELLOW}💡 The Analytics API may have type coercion or validation that prevented errors${NC}\n"
+      echo -e "${YELLOW}⚠️  No errors — but the data is SILENTLY WRONG${NC}"
+      echo -e "${YELLOW}💡 JSON accepted string \"99.99\" and consumers silently coerced it${NC}"
+      echo -e "${YELLOW}💡 Without a schema, nobody knows the correct type${NC}\n"
     fi
+
+    # Show the data mismatch visually regardless of error count
+    echo -e "${CYAN}🔍 Inspecting the data at each service:${NC}\n"
+
+    if [ -n "$ORDER_ID_1" ]; then
+      echo -e "${YELLOW}☕ Java Order Service sent:${NC}"
+      JAVA_ORDER=$(curl -s "http://localhost:9080/orders/$ORDER_ID_1")
+      if [ -n "$JAVA_ORDER" ] && echo "$JAVA_ORDER" | jq -e '.amount' > /dev/null 2>&1; then
+        JAVA_AMOUNT=$(echo "$JAVA_ORDER" | jq -r '.amount')
+        echo -e "  amount = ${JAVA_AMOUNT} (${BLUE}number${NC})"
+      fi
+
+      echo -e "${YELLOW}📊 Node.js Analytics API received:${NC}"
+      ANALYTICS_MSG=$(curl -s "http://localhost:9300/api/messages/recent" | jq -r ".messages[]? | select(.orderId == \"$ORDER_ID_1\")" 2>/dev/null)
+      if [ -n "$ANALYTICS_MSG" ]; then
+        ANA_AMOUNT=$(echo "$ANALYTICS_MSG" | jq -r '.amount')
+        ANA_TYPE=$(echo "$ANALYTICS_MSG" | jq -r '.amount | type')
+        echo -e "  amount = ${ANA_AMOUNT} (${RED}${ANA_TYPE}${NC})"
+        echo -e "${RED}  ⚠️  Type mismatch: producer sent a number, consumer stored a ${ANA_TYPE}${NC}"
+      else
+        echo -e "  (Order not yet visible in Analytics API)"
+      fi
+    fi
+
+    echo ""
+    pause
 fi
+
+pause
 
 # Summary
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"

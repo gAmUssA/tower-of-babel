@@ -77,7 +77,7 @@ sleep 5
 
 # Check for errors in Inventory Service
 INVENTORY_ERRORS=$(curl -s http://localhost:9000/errors)
-INVENTORY_ERROR_COUNT=$(echo $INVENTORY_ERRORS | grep -o '"error_count":[0-9]*' | head -1 | cut -d':' -f2)
+INVENTORY_ERROR_COUNT=$(echo "$INVENTORY_ERRORS" | jq '[.json_consumer.error_count, .avro_consumer.error_count] | add // 0')
 INVENTORY_ERROR_COUNT=${INVENTORY_ERROR_COUNT:-0}
 
 echo
@@ -94,7 +94,7 @@ fi
 
 # Check for errors in Analytics API
 ANALYTICS_ERRORS=$(curl -s http://localhost:9300/api/errors)
-ANALYTICS_ERROR_COUNT=$(echo $ANALYTICS_ERRORS | grep -o '"errorCount":[0-9]*' | head -1 | cut -d':' -f2)
+ANALYTICS_ERROR_COUNT=$(echo "$ANALYTICS_ERRORS" | jq '[.json.errorCount, .avro.errorCount] | add // 0')
 ANALYTICS_ERROR_COUNT=${ANALYTICS_ERROR_COUNT:-0}
 
 echo -e "${YELLOW}🔍 Analytics API Errors: $ANALYTICS_ERROR_COUNT${NC}"

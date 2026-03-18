@@ -39,8 +39,8 @@ Create a live coding demonstration showcasing the evolution from chaotic polyglo
 #### Infrastructure Services
 | Component | Technology | Version | Purpose |
 |-----------|------------|---------|---------|
-| Kafka | Confluent Platform (KRaft) | 7.9.1 | Message broker (no Zookeeper) |
-| Schema Registry | Confluent Platform | 7.9.1 | Schema management |
+| Kafka | Confluent Platform (KRaft) | 8.1.0 | Message broker (no Zookeeper) |
+| Schema Registry | Confluent Platform | 8.1.1 | Schema management |
 | Kafka UI | Optional | latest | Lightweight monitoring |
 
 #### Deployment Options
@@ -198,7 +198,7 @@ export interface OrderEvent {
 version: '3.8'
 services:
   kafka:
-    image: confluentinc/cp-kafka:7.9.1
+    image: confluentinc/cp-kafka:8.1.0
     hostname: kafka
     container_name: kafka
     ports:
@@ -225,7 +225,7 @@ services:
       retries: 10
 
   schema-registry:
-    image: confluentinc/cp-schema-registry:7.9.1
+    image: confluentinc/cp-schema-registry:8.1.1
     hostname: schema-registry
     container_name: schema-registry
     depends_on:
@@ -302,7 +302,7 @@ CONFLUENT_CLOUD_SR_API_SECRET=your-sr-api-secret
     <dependency>
         <groupId>io.confluent</groupId>
         <artifactId>kafka-avro-serializer</artifactId>
-        <version>7.9.1</version>
+        <version>8.1.0</version>
     </dependency>
     <dependency>
         <groupId>org.apache.avro</groupId>
@@ -730,51 +730,63 @@ describe('Schema Registry Integration', () => {
 
 ```makefile
 # Quick reference for demo execution
-make help            # 📋 Show all available commands
-make setup           # 🏗️  Local Docker environment  
-make setup-cloud     # ☁️  Confluent Cloud environment
-make demo-broken     # 💥 Start with serialization failures
-make demo-fixed      # ✅ Switch to Schema Registry
-make demo-evolution  # 🔄 Show schema evolution
-make demo-reset      # 🔄 Reset for next demo run
-make clean          # 🧹 Full cleanup
-make status         # 📊 Check service health
-make logs           # 📜 Show service logs
+make help                  # 📋 Show all available commands
+make setup                 # 🏗️  Local Docker environment
+make setup-cloud           # ☁️  Confluent Cloud environment
+make demo-workflow         # 📖 Show recommended demo workflow
+
+# Demo scripts (run in order for full presentation)
+make demo-1                # 🗼 Tower of Babel - Serialization Chaos
+make demo-2                # 🐟 Babel Fish - Schema Registry Solution
+make demo-3                # 🔄 Safe Evolution - Schema Compatibility
+make demo-4                # 🛡️  Prevented Disasters - Breaking Changes
+make demo-all              # 🎭 Run all demos in sequence
+
+# Individual scenarios
+make demo-1-java           # Java serialization failure only
+make demo-1-json           # JSON field mismatch only
+make demo-1-type           # Type inconsistency only
+
+# Service management
+make run-order-service     # 🚀 Java/Spring Boot (port 9080)
+make run-inventory-service # 🚀 Python/FastAPI (port 9000)
+make run-analytics-api     # 🚀 Node.js/Express (port 9300)
+
+# Utilities
+make demo-reset            # 🔄 Reset for next demo run
+make status                # 📊 Check service health
+make clean                 # 🧹 Full cleanup
+make generate              # 🔧 Generate code from schemas
+make test-all              # 🧪 Run all automated tests
 ```
 
 ## Appendix B: GitHub Repository Structure
 
 ```
-kafka-schema-demo/
+tower-of-babel/
 ├── 📁 services/
 │   ├── 📁 order-service/         (Java/Spring Boot + Gradle/Kotlin)
 │   │   ├── build.gradle.kts      (Kotlin DSL build script)
-│   │   ├── gradle/wrapper/       (Gradle wrapper)
-│   │   ├── gradlew              (Gradle wrapper script)
-│   │   └── src/main/avro/       (Avro schema sources)
-│   ├── 📁 inventory-service/     (Python/FastAPI + uv)
-│   │   ├── pyproject.toml       (uv project file)
+│   │   └── src/main/java/        (Application + generated Avro code)
+│   ├── 📁 inventory-service/     (Python/FastAPI)
+│   │   ├── inventory_service/    (FastAPI app + consumers)
+│   │   ├── requirements.txt
 │   │   └── scripts/generate_classes.py
 │   └── 📁 analytics-api/         (Node.js/Express + TypeScript)
-│       ├── package.json
-│       └── src/generated/       (Generated TypeScript interfaces)
-├── 📁 scripts/
-│   ├── wait-for-services.sh
-│   ├── start-broken-services.sh
-│   ├── start-avro-services.sh
-│   └── cleanup-*.sh
+│       ├── src/                  (Express app + consumers + dashboard)
+│       └── package.json
 ├── 📁 schemas/                   (Central schema repository)
-│   ├── order-event.avsc
-│   ├── user-event.avsc
-│   └── payment-event.avsc
-├── 📁 docs/
-│   ├── SETUP.md
-│   ├── DEMO_SCRIPT.md
-│   ├── GRADLE_GUIDE.md          (Gradle + Kotlin DSL guide)
-│   └── TROUBLESHOOTING.md
-├── docker-compose.yml
-├── docker-compose.cloud.yml
-├── Makefile                     (Uses gradlew for Java builds)
+│   ├── v1/                       (V1 schemas: order, user, payment)
+│   ├── v2/                       (V2 evolved schemas)
+│   └── incompatible/             (Breaking change examples)
+├── 📁 scripts/
+│   ├── demo/                     (Demo scripts 1-4 + trigger scripts)
+│   ├── test/                     (Automated test suites)
+│   └── utils/                    (Schema registration, cleanup, health)
+├── 📁 docs/                      (Requirements, plan, evolution guide)
+├── docker-compose.yml            (Local Kafka + Schema Registry)
+├── docker-compose.cloud.yml      (Confluent Cloud config)
+├── Makefile                      (Demo automation with emoji/colors)
 └── README.md
 ```
 

@@ -1,0 +1,106 @@
+%% Tower of Babel - Order Data Pipeline Sequence Diagram
+%% Shows the temporal flow of messages through the system
+
+sequenceDiagram
+    participant Client
+    participant OrderService as Order Service<br/>(Java/Kotlin:9080)
+    participant Kafka as Kafka Broker<br/>(29092)
+    participant SchemaReg as Schema Registry<br/>(8081)
+    participant Inventory as Inventory Service<br/>(Python:9000)
+    participant Analytics as Analytics API<br/>(Node.js:9300)
+
+    Note over Client,Analytics: ✅ SUCCESSFUL PATH: Avro Serialization with Schema Registry
+
+    Client->>+OrderService: POST /orders/avro<br/>userId, amount, items
+    
+    OrderService->>OrderService: Create Order object
+    OrderService->>OrderService: OrderEvent.newBuilder()<br/>setOrderId, setUserId<br/>setAmount, setStatus
+    
+    OrderService->>+SchemaReg: Register/Fetch Schema<br/>OrderEvent schema
+    SchemaReg-->>-OrderService: Schema ID: 1
+    
+    OrderService->>OrderService: KafkaAvroSerializer<br/>Add magic byte (0x00)<br/>Add schema ID (1)<br/>Serialize to binary
+    
+    OrderService->>+Kafka: Publish to 'orders' topic<br/>magic byte + schema_id + binary
+    OrderService-->>-Client: 200 OK order created
+    
+    par Inventory Service Consumes
+        Kafka->>+Inventory: Poll message
+        Inventory->>Inventory: Check magic byte = 0x00
+        Inventory->>Inventory: Extract schema ID from bytes[1:5]
+        
+        Inventory->>+SchemaReg: GET /schemas/ids/1
+        SchemaReg-->>-Inventory: OrderEvent schema JSON
+        
+        Inventory->>Inventory: avro.schema.parse(schema)
+        Inventory->>Inventory: DatumReader.read(decoder)
+        Inventory->>Inventory: Extract orderId, userId, amount, status
+        Inventory->>Inventory: Store in inventory_store[orderId]
+        Inventory-->>-Kafka: Commit offset
+        
+        Note over Inventory: ✅ Successfully deserialized<br/>No type errors
+    and Analytics API Consumes
+        Kafka->>+Analytics: Poll message
+        Analytics->>Analytics: Check message format
+        
+        Analytics->>+SchemaReg: AvroDeserializer<br/>Auto-fetch schema
+        SchemaReg-->>-Analytics: OrderEvent schema
+        
+        Analytics->>Analytics: deserializer.deserialize()<br/>Decode Avro binary
+        Analytics->>Analytics: Convert to Order model<br/>source = 'avro'
+        Analytics->>Analytics: analyticsService.addOrder()
+        Analytics->>Analytics: Socket.IO broadcast
+        Analytics-->>-Kafka: Commit offset
+        
+        Note over Analytics: ✅ Successfully deserialized<br/>Type-safe conversion
+    end
+
+    Note over Client,Analytics: ⚠️ PROBLEMATIC PATH: JSON Serialization (No Schema)
+
+    Client->>+OrderService: POST /orders<br/>userId, amount, items
+    
+    OrderService->>OrderService: Create Order object<br/>(camelCase fields)
+    OrderService->>OrderService: JsonSerializer<br/>No schema validation
+    
+    OrderService->>+Kafka: Publish to 'orders' topic<br/>JSON with orderId, userId, etc
+    OrderService-->>-Client: 200 OK order created
+    
+    par Inventory Service Attempts JSON
+        Kafka->>+Inventory: Poll message
+        Inventory->>Inventory: Check magic byte ≠ 0x00
+        Inventory->>Inventory: json.loads(message)
+        Inventory->>Inventory: _extract_field(['order_id', 'orderId'])
+        Inventory->>Inventory: _extract_field(['user_id', 'userId'])
+        
+        alt Field names match
+            Inventory->>Inventory: Store in inventory_store
+            Note over Inventory: ⚠️ Works but fragile<br/>Depends on field name guessing
+        else Field names don't match
+            Inventory->>Inventory: ValueError: Missing field
+            Note over Inventory: ❌ Deserialization failed<br/>Error count++
+        end
+        Inventory-->>-Kafka: Commit offset
+    and Analytics API Attempts JSON
+        Kafka->>+Analytics: Poll message
+        Analytics->>Analytics: JSON.parse(message)
+        Analytics->>Analytics: Type conversions:<br/>BigDecimal → string
+        
+        alt Type conversion succeeds
+            Analytics->>Analytics: analyticsService.addOrder()
+            Note over Analytics: ⚠️ Works but type unsafe<br/>Potential data corruption
+        else Type conversion fails
+            Analytics->>Analytics: NaN or parsing error
+            Note over Analytics: ❌ Invalid data stored<br/>Error count++
+        end
+        Analytics-->>-Kafka: Commit offset
+    end
+
+    Note over Client,Analytics: 🔍 Key Differences
+
+    rect rgb(144, 238, 144)
+        Note over OrderService,Analytics: Avro Path Benefits:<br/>✅ Schema validation at write time<br/>✅ Schema evolution support<br/>✅ Type safety across languages<br/>✅ Automatic schema distribution<br/>✅ Compact binary format
+    end
+
+    rect rgb(255, 182, 193)
+        Note over OrderService,Analytics: JSON Path Issues:<br/>❌ No schema enforcement<br/>❌ Field name mismatches<br/>❌ Type conversion errors<br/>❌ Manual field mapping<br/>❌ Larger message size
+    end

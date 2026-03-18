@@ -18,7 +18,7 @@ TESTS_FAILED=0
 
 # Test 1: Java serialization should cause errors
 echo -e "${CYAN}Test 1: Java serialization causes deserialization errors${NC}"
-INITIAL_ERRORS=$(curl -s http://localhost:9000/errors | grep -o '"error_count":[0-9]*' | head -1 | cut -d':' -f2)
+INITIAL_ERRORS=$(curl -s http://localhost:9000/errors | jq '[.json_consumer.error_count, .avro_consumer.error_count] | add // 0')
 INITIAL_ERRORS=${INITIAL_ERRORS:-0}
 
 curl -s -X POST http://localhost:9080/orders/broken \
@@ -27,7 +27,7 @@ curl -s -X POST http://localhost:9080/orders/broken \
 
 sleep 3
 
-NEW_ERRORS=$(curl -s http://localhost:9000/errors | grep -o '"error_count":[0-9]*' | head -1 | cut -d':' -f2)
+NEW_ERRORS=$(curl -s http://localhost:9000/errors | jq '[.json_consumer.error_count, .avro_consumer.error_count] | add // 0')
 NEW_ERRORS=${NEW_ERRORS:-0}
 
 if [ "$NEW_ERRORS" -gt "$INITIAL_ERRORS" ]; then

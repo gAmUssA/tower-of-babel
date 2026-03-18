@@ -38,12 +38,13 @@ fi
 echo
 echo -e "${BLUE}🚀 Sending orders with various type issues...${NC}"
 
-# Create an order with string amount that can't be parsed as number
+# Create an order with string amount — JSON silently accepts it,
+# but consumers expecting a number type may break or silently coerce
 ORDER_RESPONSE1=$(curl -s -X POST http://localhost:9080/orders \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "user123",
-    "amount": "not-a-number",
+    "amount": "99.99",
     "items": [
       {
         "productId": "product456",
@@ -56,7 +57,7 @@ ORDER_RESPONSE1=$(curl -s -X POST http://localhost:9080/orders \
 ORDER_ID1=$(echo $ORDER_RESPONSE1 | grep -o '"orderId":"[^"]*"' | cut -d'"' -f4)
 
 if [ -n "$ORDER_ID1" ]; then
-  echo -e "${GREEN}✅ Order created with ID: $ORDER_ID1 (amount: 'not-a-number')${NC}"
+  echo -e "${GREEN}✅ Order created with ID: $ORDER_ID1 (amount: '99.99' as string)${NC}"
 else
   echo -e "${RED}❌ Failed to create order with invalid amount${NC}"
 fi
@@ -113,7 +114,7 @@ sleep 5
 
 # Check for errors in Analytics API
 ANALYTICS_ERRORS=$(curl -s http://localhost:9300/api/errors)
-ANALYTICS_ERROR_COUNT=$(echo $ANALYTICS_ERRORS | grep -o '"errorCount":[0-9]*' | head -1 | cut -d':' -f2)
+ANALYTICS_ERROR_COUNT=$(echo "$ANALYTICS_ERRORS" | jq '[.json.errorCount, .avro.errorCount] | add // 0')
 ANALYTICS_ERROR_COUNT=${ANALYTICS_ERROR_COUNT:-0}
 
 echo

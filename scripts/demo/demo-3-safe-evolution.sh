@@ -12,6 +12,22 @@ PURPLE='\033[0;35m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
+# Interactive mode support
+INTERACTIVE=false
+for arg in "$@"; do
+  case "$arg" in
+    -i|--interactive) INTERACTIVE=true ;;
+  esac
+done
+
+pause() {
+  if [ "$INTERACTIVE" = true ]; then
+    echo ""
+    read -r -p "  Press Enter to continue..."
+    echo ""
+  fi
+}
+
 echo -e "${BLUE}🔄 Demo 3: Safe Evolution - Schema Compatibility${NC}"
 echo -e "${CYAN}=====================================================${NC}"
 echo -e "${YELLOW}This demo shows how Schema Registry enables safe schema${NC}"
@@ -63,6 +79,7 @@ else
 fi
 
 echo ""
+pause
 
 # Step 2: Test compatibility of v2 schema (adding optional fields)
 echo -e "${BLUE}📋 Step 2: Testing v2 schema compatibility (adding optional fields)...${NC}"
@@ -104,6 +121,7 @@ if [ "$IS_COMPATIBLE" = "true" ]; then
         echo -e "${GREEN}✅ Schema v2 registered successfully${NC}"
         echo -e "${CYAN}Schema ID: $SCHEMA_ID${NC}"
         echo -e "${CYAN}Schema Version: $SCHEMA_VERSION${NC}"
+        pause
     else
         echo -e "${RED}❌ Failed to register schema v2${NC}"
         echo "$REGISTER_RESPONSE" | jq .
@@ -174,6 +192,7 @@ else
 fi
 
 echo ""
+pause
 
 # Summary
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"

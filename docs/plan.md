@@ -19,7 +19,7 @@ This implementation plan outlines the development of a comprehensive Kafka Schem
 **Rationale:** A containerized environment ensures consistent demo execution across different presentation environments while minimizing setup complexity.
 
 **Implementation Strategy:**
-- Use Confluent Platform 7.9.1 with KRaft mode (no Zookeeper dependency)
+- Use Confluent Platform 8.1.0 with KRaft mode (no Zookeeper dependency)
 - Configure separate internal/external Kafka listeners for service-to-service and demo connectivity
 - Implement comprehensive health checks to ensure reliable startup sequences
 - Provide both local Docker and Confluent Cloud deployment options
@@ -28,8 +28,8 @@ This implementation plan outlines the development of a comprehensive Kafka Schem
 ```yaml
 # docker-compose.yml structure
 services:
-  kafka:          # confluentinc/cp-kafka:7.9.1 (KRaft mode)
-  schema-registry: # confluentinc/cp-schema-registry:7.9.1  
+  kafka:          # confluentinc/cp-kafka:8.1.0 (KRaft mode)
+  schema-registry: # confluentinc/cp-schema-registry:8.1.1
   kafka-ui:       # provectuslabs/kafka-ui:latest (monitoring)
 ```
 

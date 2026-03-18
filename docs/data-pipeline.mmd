@@ -1,0 +1,88 @@
+%% Tower of Babel - Order Data Pipeline
+%% Order Service → Kafka → Inventory & Analytics Services
+
+graph TB
+    subgraph "Order Service (Java/Kotlin - Port 9080)"
+        REST[REST API Endpoints]
+        REST --> |POST /orders| JSON_ENDPOINT[JSON Serialization]
+        REST --> |POST /orders/broken| JAVA_ENDPOINT[Java Serialization]
+        REST --> |POST /orders/avro| AVRO_ENDPOINT[Avro Serialization ✅]
+        
+        JSON_ENDPOINT --> JSON_SVC[OrderService.saveOrder]
+        JAVA_ENDPOINT --> JAVA_SVC[OrderService.saveOrderWithJavaSerialization]
+        AVRO_ENDPOINT --> AVRO_SVC[OrderService.saveOrderWithAvroSerialization]
+        
+        JSON_SVC --> JSON_TEMPLATE[KafkaTemplate<br/>JsonSerializer]
+        JAVA_SVC --> JAVA_TEMPLATE[KafkaTemplate<br/>ByteArraySerializer]
+        AVRO_SVC --> AVRO_BUILDER[OrderEvent.newBuilder<br/>setOrderId, setUserId<br/>setAmount, setStatus]
+        AVRO_BUILDER --> AVRO_TEMPLATE[KafkaTemplate<br/>KafkaAvroSerializer]
+    end
+    
+    subgraph "Kafka Infrastructure"
+        BROKER[Kafka Broker<br/>localhost:29092<br/>Topic: orders]
+        SCHEMA_REG[Schema Registry<br/>localhost:8081<br/>Stores Avro Schemas]
+        
+        AVRO_TEMPLATE -.->|Register Schema| SCHEMA_REG
+        JSON_TEMPLATE --> BROKER
+        JAVA_TEMPLATE --> BROKER
+        AVRO_TEMPLATE --> BROKER
+    end
+    
+    subgraph "Inventory Service (Python/FastAPI - Port 9000)"
+        INV_APP[FastAPI Application]
+        INV_APP --> INV_JSON_CONSUMER[OrderKafkaConsumer<br/>Group: inventory-service]
+        INV_APP --> INV_AVRO_CONSUMER[AvroOrderKafkaConsumer<br/>Group: inventory-service-avro]
+        
+        BROKER --> INV_JSON_CONSUMER
+        BROKER --> INV_AVRO_CONSUMER
+        
+        INV_JSON_CONSUMER --> INV_JSON_PROCESS[Parse JSON<br/>Handle Field Mismatches<br/>_extract_field]
+        INV_AVRO_CONSUMER --> INV_AVRO_FETCH[Fetch Schema from Registry]
+        SCHEMA_REG -.-> INV_AVRO_FETCH
+        INV_AVRO_FETCH --> INV_AVRO_DESERIALIZE[Avro DatumReader<br/>Deserialize Binary]
+        
+        INV_JSON_PROCESS --> INV_STORE[inventory_store Dict]
+        INV_AVRO_DESERIALIZE --> INV_STORE
+        
+        INV_STORE --> INV_API[REST Endpoints<br/>GET /inventory<br/>GET /inventory/order_id]
+    end
+    
+    subgraph "Analytics API (Node.js/Express - Port 9300)"
+        ANA_APP[Express Application]
+        ANA_APP --> ANA_JSON_CONSUMER[KafkaConsumerService<br/>Group: analytics-api]
+        ANA_APP --> ANA_AVRO_CONSUMER[AvroKafkaConsumerService<br/>Group: analytics-api-avro]
+        
+        BROKER --> ANA_JSON_CONSUMER
+        BROKER --> ANA_AVRO_CONSUMER
+        
+        ANA_JSON_CONSUMER --> ANA_JSON_PROCESS[Parse JSON<br/>Type Conversions<br/>BigDecimal → string]
+        ANA_AVRO_CONSUMER --> ANA_AVRO_CLIENT[SchemaRegistryClient<br/>AvroDeserializer]
+        SCHEMA_REG -.-> ANA_AVRO_CLIENT
+        ANA_AVRO_CLIENT --> ANA_AVRO_DESERIALIZE[Deserialize Avro<br/>Auto Schema Fetch]
+        
+        ANA_JSON_PROCESS --> ANA_EMIT_JSON[Emit 'order' Event]
+        ANA_AVRO_DESERIALIZE --> ANA_EMIT_AVRO[Emit 'order' Event]
+        
+        ANA_EMIT_JSON --> ANA_SERVICE[AnalyticsService<br/>addOrder]
+        ANA_EMIT_AVRO --> ANA_SERVICE
+        
+        ANA_SERVICE --> ANA_SOCKETIO[Socket.IO<br/>Real-time Updates]
+        ANA_SERVICE --> ANA_API[REST Endpoints<br/>GET /api/analytics<br/>GET /api/messages/recent]
+    end
+    
+    subgraph "Schema Definition"
+        SCHEMA_FILE[schemas/v1/order-event.avsc<br/>OrderEvent Schema<br/>- orderId: string<br/>- userId: string<br/>- amount: double<br/>- status: string]
+        SCHEMA_FILE -.-> AVRO_BUILDER
+        SCHEMA_FILE -.-> SCHEMA_REG
+    end
+    
+    %% Styling
+    classDef successPath fill:#90EE90,stroke:#2E8B57,stroke-width:3px
+    classDef failurePath fill:#FFB6C1,stroke:#DC143C,stroke-width:2px
+    classDef infrastructure fill:#87CEEB,stroke:#4682B4,stroke-width:2px
+    classDef storage fill:#FFD700,stroke:#FF8C00,stroke-width:2px
+    
+    class AVRO_ENDPOINT,AVRO_SVC,AVRO_BUILDER,AVRO_TEMPLATE,INV_AVRO_CONSUMER,INV_AVRO_FETCH,INV_AVRO_DESERIALIZE,ANA_AVRO_CONSUMER,ANA_AVRO_CLIENT,ANA_AVRO_DESERIALIZE,ANA_EMIT_AVRO successPath
+    class JSON_ENDPOINT,JAVA_ENDPOINT,JSON_SVC,JAVA_SVC,JSON_TEMPLATE,JAVA_TEMPLATE,INV_JSON_CONSUMER,INV_JSON_PROCESS,ANA_JSON_CONSUMER,ANA_JSON_PROCESS,ANA_EMIT_JSON failurePath
+    class BROKER,SCHEMA_REG infrastructure
+    class INV_STORE,ANA_SERVICE storage

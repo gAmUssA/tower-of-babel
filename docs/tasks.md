@@ -8,12 +8,12 @@ This task list is derived from the implementation plan in `docs/plan.md` and org
 
 ### 1.1 Docker Environment Setup
 - [x] 1.1.1 Create `docker-compose.yml` with Kafka KRaft configuration
-- [x] 1.1.2 Configure Kafka service (confluentinc/cp-kafka:7.9.0)
+- [x] 1.1.2 Configure Kafka service (confluentinc/cp-kafka:8.1.0)
   - [x] Set up KRaft mode (no Zookeeper)
   - [x] Configure internal listener (kafka:9092)
   - [x] Configure external listener (localhost:29092)
   - [x] Set up environment variables for KRaft
-- [x] 1.1.3 Configure Schema Registry service (confluentinc/cp-schema-registry:7.9.0)
+- [x] 1.1.3 Configure Schema Registry service (confluentinc/cp-schema-registry:8.1.1)
   - [x] Set up Schema Registry on port 8081
   - [x] Configure connection to Kafka
   - [x] Set up proper dependencies and health checks
