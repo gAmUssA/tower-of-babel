@@ -121,7 +121,7 @@ export class KafkaConsumerService {
       // Process items with type inconsistencies
       if (order.items && Array.isArray(order.items)) {
         order.items = order.items.map(item => ({
-          productId: item.productId || '',
+          productId: Number(item.productId) || 0,
           quantity: item.quantity || 0,
           // Type inconsistency: Convert BigDecimal to number
           price: parseFloat(item.price || '0')
