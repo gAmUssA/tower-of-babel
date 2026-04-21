@@ -92,7 +92,7 @@ Before running demos, ensure:
 1. **Infrastructure is running:**
 
    ```bash
-   make run-kafka  # Starts Kafka + Schema Registry
+   make setup  # Starts Kafka + Schema Registry
    ```
 
 2. **Services are running:**

@@ -1,39 +1,88 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits"
+  ],
+  "enabledManagers": [
+    "docker-compose",
+    "gradle",
+    "npm",
+    "pep621",
+    "pip_requirements"
   ],
   "packageRules": [
     {
-      "matchUpdateTypes": [
-        "minor",
-        "patch"
+      "groupName": "order-service dependencies",
+      "matchFileNames": [
+        "services/order-service/**"
       ],
-      "matchCurrentVersion": "!/^0/",
-      "automerge": true
+      "addLabels": [
+        "java"
+      ]
+    },
+    {
+      "groupName": "inventory-service dependencies",
+      "matchFileNames": [
+        "services/inventory-service/**"
+      ],
+      "addLabels": [
+        "python"
+      ]
+    },
+    {
+      "groupName": "analytics-api dependencies",
+      "matchFileNames": [
+        "services/analytics-api/**"
+      ],
+      "addLabels": [
+        "node"
+      ]
+    },
+    {
+      "groupName": "infrastructure container images",
+      "matchManagers": [
+        "docker-compose"
+      ],
+      "addLabels": [
+        "docker"
+      ]
     },
     {
       "groupName": "confluent packages",
       "matchPackageNames": [
-        "/^com.confluent/"
+        "/^com\\.confluent/",
+        "/^io\\.confluent/",
+        "/^confluentinc\\//"
       ]
     },
     {
       "groupName": "spring packages",
       "matchPackageNames": [
-        "/^org.springframework/"
-      ]
-    },
-    {
-      "groupName": "confluent packages",
-      "matchPackageNames": [
-        "/^io.confluent/"
+        "/^org\\.springframework/",
+        "/^org\\.springdoc/"
       ]
     },
     {
       "groupName": "kafka packages",
       "matchPackageNames": [
+        "/^org\\.apache\\.kafka/",
         "/kafka/"
+      ]
+    },
+    {
+      "matchManagers": [
+        "docker-compose"
+      ],
+      "pinDigests": true
+    },
+    {
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "addLabels": [
+        "breaking-change"
       ]
     }
   ],
@@ -50,8 +99,13 @@
   ],
   "timezone": "America/New_York",
   "dependencyDashboard": true,
-  "semanticCommits": "enabled",
   "semanticCommitType": "chore",
   "semanticCommitScope": "deps",
-  "rangeStrategy": "auto"
+  "rangeStrategy": "auto",
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": [
+      "before 4am on the first day of the month"
+    ]
+  }
 }
