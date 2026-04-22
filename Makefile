@@ -11,7 +11,7 @@ RED = \033[0;31m
 BLUE = \033[0;34m
 NC = \033[0m # No Color
 
-.PHONY: help demo-workflow setup setup-cloud clean status demo-reset generate build install-deps install-python-deps install-node-deps run-order-service run-inventory-service run-analytics-api \
+.PHONY: help demo-ready demo-workflow setup setup-cloud clean status demo-reset generate build install-deps install-python-deps install-node-deps run-order-service run-inventory-service run-analytics-api \
 	demo-1 demo-1-tower-of-babel demo-1-java demo-1-json demo-1-type \
 	demo-2 demo-2-babel-fish demo-2-comprehensive \
 	demo-3 demo-3-safe-evolution \
@@ -317,6 +317,9 @@ analytics-api-smoke-test: ## 🔥 Run smoke tests for the Node.js analytics API
 	@echo -e "$(BLUE)Testing Node.js dependencies and critical functionality...$(NC)"
 	chmod +x services/analytics-api/scripts/smoke-test.js
 	cd services/analytics-api && node scripts/smoke-test.js
+
+demo-ready: ## 🖥️  Launch tmux session with all 3 services + scenario window
+	@./scripts/demo-ready.sh
 
 demo-workflow: ## 📖 Show recommended demo workflow
 	@echo -e "$(BLUE)📖 Recommended Demo Workflow$(NC)"
