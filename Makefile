@@ -82,7 +82,7 @@ generate: ## 🔧 Generate code from schemas
 	@echo -e "$(YELLOW)Java POJOs (Gradle + Kotlin DSL):$(NC)"
 	cd services/order-service && ./gradlew generateAvroJava
 	@echo -e "$(YELLOW)Python dataclasses:$(NC)"
-	cd services/inventory-service && python3 scripts/generate_classes.py
+	cd services/inventory-service && uv run python scripts/generate_classes.py
 	@echo -e "$(YELLOW)TypeScript interfaces:$(NC)"
 	cd services/analytics-api && npm run generate-types
 	@echo -e "$(GREEN)✅ Code generation complete!$(NC)"
@@ -92,16 +92,8 @@ install-deps: install-python-deps install-node-deps ## 📦 Install all dependen
 
 install-python-deps: ## 📦 Install Python dependencies
 	@echo -e "$(GREEN)📦 Installing Python dependencies...$(NC)"
-	@if [ ! -d services/inventory-service/.venv ]; then \
-		echo -e "$(YELLOW)🔧 Creating Python virtual environment with Python 3.12...$(NC)"; \
-		cd services/inventory-service && python3.12 -m venv .venv; \
-	fi
-	@echo -e "$(YELLOW)🔧 Installing dependencies for Python 3.12...$(NC)"
-	cd services/inventory-service && source .venv/bin/activate && \
-	pip install --upgrade pip && \
-	pip install wheel && \
-	pip install -r requirements.txt
-	@echo -e "$(GREEN)✅ Python dependencies installed in virtual environment!$(NC)"
+	cd services/inventory-service && uv sync --extra dev
+	@echo -e "$(GREEN)✅ Python dependencies installed!$(NC)"
 
 install-node-deps: ## 📦 Install Node.js dependencies
 	@echo -e "$(GREEN)📦 Installing Node.js dependencies...$(NC)"
@@ -116,13 +108,7 @@ build: install-deps generate ## 💪  Build all services
 	@echo -e "$(GREEN)✅ Java Order Service build complete!$(NC)"
 
 	@echo -e "$(YELLOW)💪 Building Python Inventory Service:$(NC)"
-	@if [ ! -d services/inventory-service/.venv ]; then \
-		echo -e "$(YELLOW)🔧 Creating Python virtual environment...$(NC)"; \
-		cd services/inventory-service && python3 -m venv .venv; \
-		echo -e "$(YELLOW)🔧 Installing dependencies in virtual environment...$(NC)"; \
-		cd services/inventory-service && source .venv/bin/activate && pip install -r requirements.txt; \
-	fi
-	cd services/inventory-service && source .venv/bin/activate && python -m pytest --tb=short || echo -e "$(YELLOW)⚠️  No tests to run yet$(NC)"
+	cd services/inventory-service && uv run python -m pytest --tb=short || echo -e "$(YELLOW)⚠️  No tests to run yet$(NC)"
 	@echo -e "$(GREEN)✅ Python Inventory Service build complete!$(NC)"
 
 	@echo -e "$(YELLOW)💪 Building Node.js Analytics API:$(NC)"
@@ -153,8 +139,7 @@ run-order-service: ## 🚀 Run Java Order Service
 
 run-inventory-service: ## 🚀 Run Python Inventory Service
 	@echo -e "$(GREEN)🚀 Starting Inventory Service...$(NC)"
-	@echo -e "$(BLUE)Using Python virtual environment...$(NC)"
-	cd services/inventory-service && source .venv/bin/activate && python -m inventory_service.main
+	cd services/inventory-service && uv run python -m inventory_service.main
 
 run-analytics-api: install-node-deps ## 🚀 Run Node.js Analytics API
 	@echo -e "$(GREEN)🚀 Starting Analytics API...$(NC)"
@@ -325,8 +310,7 @@ phase4-test: test-2-avro-integration ## 🧪 [DEPRECATED] Use test-2-avro-integr
 inventory-service-smoke-test: ## 🔥 Run smoke tests for the Python inventory service
 	@echo -e "$(GREEN)🔥 Running Smoke Tests for Python Inventory Service...$(NC)"
 	@echo -e "$(BLUE)Testing Python dependencies and critical functionality...$(NC)"
-	chmod +x services/inventory-service/scripts/smoke_test.py
-	cd services/inventory-service && source .venv/bin/activate && python scripts/smoke_test.py
+	cd services/inventory-service && uv run python scripts/smoke_test.py
 
 analytics-api-smoke-test: ## 🔥 Run smoke tests for the Node.js analytics API
 	@echo -e "$(GREEN)🔥 Running Smoke Tests for Node.js Analytics API...$(NC)"

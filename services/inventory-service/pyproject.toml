@@ -5,21 +5,23 @@ description = "Inventory Service for Kafka Schema Registry Demo"
 authors = [
     {name = "Demo Author", email = "demo@example.com"},
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.12"
 readme = "README.md"
 license = {text = "MIT"}
 dependencies = [
-    "fastapi>=0.104.0",
-    "uvicorn>=0.23.2",
-    "pydantic>=2.4.2",
-    "confluent-kafka>=2.3.0",
-    "python-dotenv>=1.0.0",
-    "requests>=2.31.0",
+    "fastapi>=0.128.0",
+    "uvicorn>=0.39.0",
+    "pydantic>=2.12.5",
+    "confluent-kafka>=2.13.0",
+    "python-dotenv>=1.2.1",
+    "requests>=2.32.5",
+    "avro-python3>=1.10.2",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=7.4.3",
+    "pytest>=8.4.2",
+    "httpx>=0.28.1",
     "black>=23.10.1",
     "isort>=5.12.0",
     "mypy>=1.6.1",
@@ -32,19 +34,19 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["inventory_service"]
 
-[tool.pytest]
+[tool.pytest.ini_options]
 testpaths = ["tests"]
 
 [tool.black]
 line-length = 88
-target-version = ["py39"]
+target-version = ["py312"]
 
 [tool.isort]
 profile = "black"
 line_length = 88
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
