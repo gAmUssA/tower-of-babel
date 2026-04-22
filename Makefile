@@ -97,7 +97,8 @@ install-python-deps: ## 📦 Install Python dependencies
 
 install-node-deps: ## 📦 Install Node.js dependencies
 	@echo -e "$(GREEN)📦 Installing Node.js dependencies...$(NC)"
-	cd services/analytics-api && npm ci
+	source "$$HOME/.nvm/nvm.sh" 2>/dev/null; nvm use 22 --silent 2>/dev/null || true; \
+	cd services/analytics-api && npm install
 	@echo -e "$(GREEN)✅ Node.js dependencies installed!$(NC)"
 
 build: install-deps generate ## 💪  Build all services
@@ -112,7 +113,8 @@ build: install-deps generate ## 💪  Build all services
 	@echo -e "$(GREEN)✅ Python Inventory Service build complete!$(NC)"
 
 	@echo -e "$(YELLOW)💪 Building Node.js Analytics API:$(NC)"
-	cd services/analytics-api && npm ci && npm run build
+	source "$$HOME/.nvm/nvm.sh" 2>/dev/null; nvm use 22 --silent 2>/dev/null || true; \
+	cd services/analytics-api && npm install && npm run build
 	@echo -e "$(GREEN)✅ Node.js Analytics API build complete!$(NC)"
 
 	@echo -e "$(GREEN)🎉 All builds successful!$(NC)"
@@ -143,6 +145,7 @@ run-inventory-service: ## 🚀 Run Python Inventory Service
 
 run-analytics-api: install-node-deps ## 🚀 Run Node.js Analytics API
 	@echo -e "$(GREEN)🚀 Starting Analytics API...$(NC)"
+	source "$$HOME/.nvm/nvm.sh" 2>/dev/null; nvm use 22 --silent 2>/dev/null || true; \
 	cd services/analytics-api && npm start
 
 phase3-demo: ## 🎭 [DEPRECATED] Run Phase 3 Demo - Use demo-1 instead
