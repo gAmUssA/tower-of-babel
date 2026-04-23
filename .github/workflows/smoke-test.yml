@@ -22,18 +22,18 @@ jobs:
           distribution: 'temurin'
           cache: gradle
       
-      # Setup Python for Inventory Service
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v6
+      # Setup uv + Python for Inventory Service
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
         with:
-          python-version: '3.14'
-          cache: 'pip'
+          enable-cache: true
+          cache-dependency-glob: services/inventory-service/uv.lock
       
       # Setup Node.js for Analytics API
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '24'
+          node-version-file: services/analytics-api/.nvmrc
           cache: 'npm'
           cache-dependency-path: services/analytics-api/package-lock.json
       
@@ -55,7 +55,7 @@ jobs:
           
           # Generate Python code
           cd services/inventory-service
-          python scripts/generate_classes.py
+          uv run python scripts/generate_classes.py
           cd ../..
           
           # Generate TypeScript code
@@ -74,10 +74,7 @@ jobs:
       - name: Build Inventory Service
         run: |
           cd services/inventory-service
-          # Install dependencies from requirements.txt
-          pip install -r requirements.txt
-          # Install the package in development mode
-          pip install -e .
+          uv sync --extra dev
       
       # Build Analytics API
       - name: Build Analytics API
@@ -102,8 +99,7 @@ jobs:
         run: |
           echo "🔥 Running Inventory Service smoke tests..."
           cd services/inventory-service
-          chmod +x scripts/smoke_test.py
-          python scripts/smoke_test.py
+          uv run python scripts/smoke_test.py
           echo "✅ Inventory Service smoke tests passed!"
           
       # Run Analytics API smoke test
