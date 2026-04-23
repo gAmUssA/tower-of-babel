@@ -9,8 +9,7 @@
     "docker-compose",
     "gradle",
     "npm",
-    "pep621",
-    "pip_requirements"
+    "pep621"
   ],
   "packageRules": [
     {
