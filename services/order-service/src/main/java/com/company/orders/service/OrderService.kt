@@ -2,6 +2,8 @@ package com.company.orders.service
 
 import com.company.orders.OrderEvent
 import com.company.orders.model.Order
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
 import io.confluent.kafka.serializers.KafkaAvroSerializer
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig
 import org.apache.kafka.clients.producer.ProducerConfig
@@ -11,6 +13,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.kafka.core.DefaultKafkaProducerFactory
 import org.springframework.kafka.core.KafkaTemplate
+import org.springframework.kafka.support.serializer.JsonSerializer
 import org.springframework.stereotype.Service
 import java.io.ByteArrayOutputStream
 import java.io.ObjectOutputStream
@@ -122,11 +125,15 @@ class OrderService(
     private fun createKafkaTemplate(): KafkaTemplate<String, Order> {
         val props = mapOf(
             ProducerConfig.BOOTSTRAP_SERVERS_CONFIG to bootstrapServers,
-            ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG to StringSerializer::class.java,
-            ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG to org.springframework.kafka.support.serializer.JsonSerializer::class.java
         )
-        
-        val producerFactory = DefaultKafkaProducerFactory<String, Order>(props)
+        // findAndRegisterModules discovers JavaTimeModule on the classpath, enabling Instant serialization
+        val om = ObjectMapper().findAndRegisterModules()
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+        val producerFactory = DefaultKafkaProducerFactory<String, Order>(
+            props,
+            StringSerializer(),
+            JsonSerializer<Order>(om)
+        )
         return KafkaTemplate(producerFactory)
     }
     

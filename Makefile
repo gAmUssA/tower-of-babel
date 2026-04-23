@@ -146,7 +146,7 @@ run-inventory-service: ## 🚀 Run Python Inventory Service
 run-analytics-api: install-node-deps ## 🚀 Run Node.js Analytics API
 	@echo -e "$(GREEN)🚀 Starting Analytics API...$(NC)"
 	source "$$HOME/.nvm/nvm.sh" 2>/dev/null; nvm use 22 --silent 2>/dev/null || true; \
-	cd services/analytics-api && npm start
+	cd services/analytics-api && npm run dev
 
 phase3-demo: ## 🎭 [DEPRECATED] Run Phase 3 Demo - Use demo-1 instead
 	@echo -e "$(YELLOW)⚠️  This target is deprecated. Use 'make demo-1' instead.$(NC)"
